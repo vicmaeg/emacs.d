@@ -12,9 +12,7 @@
      "a75fc55d480accd6f651d1bae492b7ab4c5b28894350b63ef39bf947bb8fd453"
      "8fbf2d585f1138caaafa9e523fa3a20614c1d1dcc6002c9808c3e40028e21df4"
      default))
- '(package-selected-packages
-   '(corfu dired-subtree marginalia modus-themes nerd-icons-completion
-	   nerd-icons-corfu nerd-icons-dired orderless trashed vertico)))
+ '(package-selected-packages nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

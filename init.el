@@ -51,6 +51,15 @@ The DWIM behaviour of this command is as follows:
 
 (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
 
+;;; Configure backups and autosave folders
+
+(setq backup-directory-alist
+      `(("." . ,(locate-user-emacs-file "backups/"))))
+(setq auto-save-file-name-transforms
+      `((".*" ,(locate-user-emacs-file "auto-save/") t)))
+
+
+
 ;;; Tweak the looks of Emacs
 
 (let ((mono-spaced-font "Monospace")
@@ -158,3 +167,36 @@ The DWIM behaviour of this command is as follows:
   (setq trashed-use-header-line t)
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+
+;;; org mode configuration
+
+(setq org-agenda-files '("~/org"))
+
+;;; project configuration
+
+(setq project-vc-extra-root-markers '("fourthline.yaml"))
+
+;;; version control
+
+(use-package magit
+  :ensure t)
+
+;;; configure hook for csharp mode to initialize eglot for the lsp
+;;(add-hook 'csharp-mode-hook #'eglot-ensure)
+
+;;(with-eval-after-load 'eglot
+;;  (add-to-list 'eglot-server-programs
+;;               '(csharp-mode . ("csharp-ls" "--features" "metadata-uris"))))
+
+;;; lsp-mode
+(use-package lsp-mode
+  :ensure t
+  :hook (csharp-mode . lsp)
+  :commands lsp
+  :config
+  (setq lsp-idle-delay 0.5
+        lsp-log-io nil
+        lsp-completion-provider :capf)
+  (advice-add 'lsp-csharp--cls-make-launch-cmd :filter-return
+              (lambda (cmd)
+                (append cmd '("--features" "metadata-uris"))))))
