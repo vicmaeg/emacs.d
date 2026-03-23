@@ -19,6 +19,12 @@
                (display-buffer-no-window)
                (allow-no-window . t)))
 
+;; use ripgrep
+
+(setq xref-search-program 'ripgrep)
+(setq grep-command "rg -nS --no-heading "
+      grep-use-null-device nil)
+
 ;;; Basic behaviour
 
 (use-package delsel
@@ -181,22 +187,15 @@ The DWIM behaviour of this command is as follows:
 (use-package magit
   :ensure t)
 
+;;; Language Servers configurations
+
 ;;; configure hook for csharp mode to initialize eglot for the lsp
-;;(add-hook 'csharp-mode-hook #'eglot-ensure)
+(add-hook 'csharp-mode-hook #'eglot-ensure)
 
-;;(with-eval-after-load 'eglot
-;;  (add-to-list 'eglot-server-programs
-;;               '(csharp-mode . ("csharp-ls" "--features" "metadata-uris"))))
-
-;;; lsp-mode
-(use-package lsp-mode
+;;; markdown mode
+(use-package markdown-mode
   :ensure t
-  :hook (csharp-mode . lsp)
-  :commands lsp
-  :config
-  (setq lsp-idle-delay 0.5
-        lsp-log-io nil
-        lsp-completion-provider :capf)
-  (advice-add 'lsp-csharp--cls-make-launch-cmd :filter-return
-              (lambda (cmd)
-                (append cmd '("--features" "metadata-uris"))))))
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "pandoc")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
