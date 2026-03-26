@@ -162,11 +162,11 @@ The DWIM behaviour of this command is as follows:
   :bind
   (("C-." . embark-act)
    ("C-;" . embark-dwim)
-   ("C-h B" . embark-bindings))
+   ("C-h B" . embark-bindings)
+   ("C-x K" . embark-kill-buffer-and-window))
   :config
   (setq embark-prompter 'embark-keymap-prompter)
-  (setq embark-quit-after-action t)
-  (add-to-list 'embark-indicator-actions 'embark-cycle-indicator))
+  (setq embark-quit-after-action t))
 
 (use-package embark-consult
   :ensure t
@@ -218,7 +218,8 @@ The DWIM behaviour of this command is as follows:
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
-  (setq dired-dwim-target t))
+  (setq dired-dwim-target t)
+  (setq dired-kill-when-opening-new-dired-buffer t))
 
 (use-package dired-subtree
   :ensure t
@@ -240,6 +241,62 @@ The DWIM behaviour of this command is as follows:
   (setq trashed-use-header-line t)
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+
+;;; denote configuration
+
+(use-package denote
+  :ensure t
+  :hook (dired-mode . denote-dired-mode)
+  :bind
+  (("C-c n n" . denote)
+   ("C-c n r" . denote-rename-file)
+   ("C-c n R" . denote-rename-file-using-front-matter)
+   ("C-c n l" . denote-link)
+   ("C-c n L" . denote-add-links)
+   ("C-c n b" . denote-backlinks)
+   ("C-c n d" . denote-dired)
+   ("C-c n g" . denote-grep))
+  :config
+  (setq denote-directory (expand-file-name "~/org/"))
+  (setq denote-file-type 'org)
+  (setq denote-save-buffers nil)
+  (setq denote-known-keywords '("journal" "note" "task" "project"))
+  (setq denote-infer-keywords t)
+  (setq denote-sort-keywords t)
+  (setq denote-prompts '(title keywords))
+  (setq denote-date-prompt-use-org-read-date t)
+  (denote-rename-buffer-mode 1))
+
+(use-package denote-journal
+  :ensure t
+  :after denote
+  :bind
+  (("C-c n j" . denote-journal-new-or-existing-entry)
+   ("C-c n J" . denote-journal-new-entry))
+  :config
+  (setq denote-journal-directory (expand-file-name "journal" denote-directory))
+  (setq denote-journal-keyword "journal")
+  (setq denote-journal-title-format 'day-date-month-year)
+  (setq denote-journal-interval 'daily)
+  (defun my-denote-journal-insert-template ()
+    (goto-char (point-max))
+    (insert "\n* Do today\n- \n\n* Meeting notes\n- \n\n* Learnings for the day\n- "))
+  (add-hook 'denote-journal-hook #'my-denote-journal-insert-template))
+
+(use-package denote-markdown
+  :ensure t
+  :after denote
+  :config
+  (setq denote-markdown-use-markdown-fontification t))
+
+(use-package consult-denote
+  :ensure t
+  :after (denote consult)
+  :bind
+  (("C-c n f" . consult-denote-find)
+   ("C-c n s" . consult-denote-grep))
+  :config
+  (consult-denote-mode 1))
 
 ;;; org mode configuration
 
