@@ -105,39 +105,106 @@ The DWIM behaviour of this command is as follows:
 
 (use-package vertico
   :ensure t
-  :hook (after-init . vertico-mode))
+  :hook (after-init . vertico-mode)
+  :config
+  (setq vertico-cycle t)
+  (setq vertico-resize t))
 
 (use-package marginalia
   :ensure t
-  :hook (after-init . marginalia-mode))
+  :hook (after-init . marginalia-mode)
+  :config
+  (setq marginalia-align-max-width 80)
+  (setq marginalia-align-separator 15))
 
 (use-package orderless
   :ensure t
   :config
   (setq completion-styles '(orderless basic))
   (setq completion-category-defaults nil)
-  (setq completion-category-overrides nil))
+  (setq completion-category-overrides
+        '((file (styles . (partial-completion orderless)))
+          (buffer (styles . (orderless basic)))
+          (info-menu (styles . (orderless basic))))))
 
 (use-package savehist
-  :ensure nil ; it is built-in
-  :hook (after-init . savehist-mode))
+  :ensure nil
+  :hook (after-init . savehist-mode)
+  :config
+  (setq savehist-save-minibuffer-history t)
+  (add-to-list 'savehist-additional-variables 'vertico-repeat-history)
+  (add-to-list 'savehist-additional-variables 'corfu-history))
+
+(use-package consult
+  :ensure t
+  :hook (completion-list-mode . consult-preview-mode)
+  :bind
+  (("C-x b" . consult-buffer)
+   ("C-x 4 b" . consult-buffer-other-window)
+   ("C-x 5 b" . consult-buffer-other-frame)
+   ("M-y" . consult-yank-pop)
+   ("M-s M-s" . consult-ripgrep)
+   ("M-s l" . consult-line)
+   ("M-s o" . consult-outline)
+   ("M-s f" . consult-find)
+   ("M-s i" . consult-imenu)
+   ("C-x M-:" . consult-complex-command))
+  :config
+  (setq consult-narrow-key "<")
+  (setq consult-line-numbers-width 4)
+  (setq consult-async-min-input 2)
+  (setq consult-async-refresh-delay 0.15)
+  (setq consult-async-input-throttle 0.2)
+  (setq consult-async-input-debounce 0.1))
+
+(use-package embark
+  :ensure t
+  :bind
+  (("C-." . embark-act)
+   ("C-;" . embark-dwim)
+   ("C-h B" . embark-bindings))
+  :config
+  (setq embark-prompter 'embark-keymap-prompter)
+  (setq embark-quit-after-action t)
+  (add-to-list 'embark-indicator-actions 'embark-cycle-indicator))
+
+(use-package embark-consult
+  :ensure t
+  :hook
+  (embark-collect-mode . consult-preview-minor-mode))
 
 (use-package corfu
   :ensure t
   :hook (after-init . global-corfu-mode)
-  :bind (:map corfu-map ("<tab>" . corfu-complete))
+  :bind
+  (:map corfu-map
+        ("<tab>" . corfu-complete)
+        ("M-m" . corfu-move-to-minibuffer)
+        ("M-q" . corfu-info-documentation))
   :config
   (setq tab-always-indent 'complete)
   (setq corfu-preview-current nil)
   (setq corfu-min-width 20)
-
+  (setq corfu-max-width 80)
   (setq corfu-popupinfo-delay '(1.25 . 0.5))
-  (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
+  (corfu-popupinfo-mode 1)
 
-  ;; Sort by input history (no need to modify `corfu-sort-function').
   (with-eval-after-load 'savehist
     (corfu-history-mode 1)
     (add-to-list 'savehist-additional-variables 'corfu-history)))
+
+(defun corfu-move-to-minibuffer ()
+  "Move current completion to minibuffer."
+  (interactive)
+  (when (completion-in-region--data)
+    (let ((completion (thing-at-point 'symbol)))
+      (corfu-quit)
+      (minibuffer-with-setup-hook
+          (lambda ()
+            (insert completion))
+        (call-interactively #'embark-act)))))
+
+(advice-add #'eglot-completion-at-point :around #'cape-wrap-buster)
 
 ;;; The file manager (Dired)
 
