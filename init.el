@@ -75,9 +75,12 @@ The DWIM behaviour of this command is as follows:
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
 
 (use-package modus-themes
+  :ensure t)
+
+(use-package gruber-darker-theme
   :ensure t
   :config
-  (load-theme 'modus-vivendi-tinted :no-confirm-loading))
+  (load-theme 'gruber-darker :no-confirm-loading))
 
 ;; Remember to do M-x and run `nerd-icons-install-fonts' to get the
 ;; font files.  Then restart Emacs to see the effect.
@@ -115,8 +118,12 @@ The DWIM behaviour of this command is as follows:
   :ensure t
   :config
   (setq completion-styles '(orderless basic))
+  ;; Eglot sets `flex` for its own categories; override so Orderless can
+  ;; filter LSP candidates in-buffer (see Corfu wiki: Eglot + Orderless).
   (setq completion-category-defaults nil)
-  (setq completion-category-overrides nil))
+  (setq completion-category-overrides
+        '((eglot (styles orderless))
+          (eglot-capf (styles orderless)))))
 
 (use-package savehist
   :ensure nil ; it is built-in
@@ -133,6 +140,10 @@ The DWIM behaviour of this command is as follows:
 
   (setq corfu-popupinfo-delay '(1.25 . 0.5))
   (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
+
+  ;; Pop up completions while typing (Eglot + Corfu expect fresh sessions).
+  (setq corfu-auto t)
+  (setq corfu-auto-delay 0.2)
 
   ;; Sort by input history (no need to modify `corfu-sort-function').
   (with-eval-after-load 'savehist
@@ -189,8 +200,26 @@ The DWIM behaviour of this command is as follows:
 
 ;;; Language Servers configurations
 
-;;; configure hook for csharp mode to initialize eglot for the lsp
-(add-hook 'csharp-mode-hook #'eglot-ensure)
+(use-package cape
+  :ensure t
+  :defer t)
+
+;; Built into Emacs 29+; on older versions install `eglot' from GNU ELPA.
+(use-package eglot
+  :ensure nil
+  :defer t
+  ;; When non-nil, kill the LSP process after the last managed buffer closes.
+  ;; Default nil keeps servers running so reopening a file reconnects quickly.
+  :custom (eglot-autoshutdown t)
+  :config
+  ;; Corfu caches the completion table; Eglot does not refresh it each edit.
+  ;; `cape-wrap-buster' re-fetches candidates from the LSP when needed.
+  (require 'cape)
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster))
+
+(use-package csharp-mode
+  :ensure t
+  :hook (csharp-mode . eglot-ensure))
 
 ;;; markdown mode
 (use-package markdown-mode
@@ -199,3 +228,4 @@ The DWIM behaviour of this command is as follows:
   :init (setq markdown-command "pandoc")
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
+
