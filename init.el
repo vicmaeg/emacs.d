@@ -267,7 +267,11 @@ The DWIM behaviour of this command is as follows:
    ("C-c n L" . denote-add-links)
    ("C-c n b" . denote-backlinks)
    ("C-c n d" . denote-dired)
-   ("C-c n g" . denote-grep))
+   ("C-c n g" . denote-grep)
+   ("C-c n j" . denote-journal-new-or-existing-entry)
+   ("C-c n J" . denote-journal-new-entry)
+   ("C-c n f" . consult-denote-find)
+   ("C-c n s" . consult-denote-grep))
   :config
   (setq denote-directory (expand-file-name "~/org/"))
   (setq denote-file-type 'org)
@@ -282,9 +286,6 @@ The DWIM behaviour of this command is as follows:
 (use-package denote-journal
   :ensure t
   :after denote
-  :bind
-  (("C-c n j" . denote-journal-new-or-existing-entry)
-   ("C-c n J" . denote-journal-new-entry))
   :config
   (setq denote-journal-directory (expand-file-name "journal" denote-directory))
   (setq denote-journal-keyword "journal")
@@ -292,7 +293,7 @@ The DWIM behaviour of this command is as follows:
   (setq denote-journal-interval 'daily)
   (defun my-denote-journal-insert-template ()
     (goto-char (point-max))
-    (insert "\n* Do today\n- \n\n* Meeting notes\n- \n\n* Learnings for the day\n- "))
+    (insert "\n* Do today\n\n\n* Meeting notes\n\n\n* Learnings for the day\n"))
   (add-hook 'denote-journal-hook #'my-denote-journal-insert-template))
 
 (use-package denote-markdown
@@ -304,9 +305,6 @@ The DWIM behaviour of this command is as follows:
 (use-package consult-denote
   :ensure t
   :after (denote consult)
-  :bind
-  (("C-c n f" . consult-denote-find)
-   ("C-c n s" . consult-denote-grep))
   :config
   (consult-denote-mode 1))
 
