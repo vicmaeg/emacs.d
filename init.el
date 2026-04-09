@@ -310,7 +310,7 @@ The DWIM behaviour of this command is as follows:
 
 ;;; org mode configuration
 
-(setq org-agenda-files '("~/org"))
+(setq org-agenda-files '("~/org" "~/org/journal"))
 
 ;;; project configuration
 
@@ -340,9 +340,37 @@ The DWIM behaviour of this command is as follows:
   (require 'cape)
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster))
 
-(use-package csharp-mode
+;;; Tree-sitter configuration
+
+(use-package treesit-auto
   :ensure t
-  :hook (csharp-mode . eglot-ensure))
+  :custom
+  (treesit-auto-install 'prompt)  ; Ask before installing grammars
+  :config
+  ;; Add C# recipe for treesit-auto
+  (add-to-list 'treesit-auto-recipe-list
+               (make-treesit-auto-recipe
+                :lang 'c-sharp
+                :ts-mode 'csharp-ts-mode
+                :remap 'csharp-mode
+                :url "https://github.com/tree-sitter/tree-sitter-c-sharp"
+                :source-dir "src"))
+  ;; Register tree-sitter modes for all supported languages
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  ;; Enable global mode
+  (global-treesit-auto-mode))
+
+;; Ensure eglot works with csharp-ts-mode
+(add-hook 'csharp-ts-mode-hook #'eglot-ensure)
+
+;; Enable electric-pair-mode for better brace handling in C#
+(add-hook 'csharp-ts-mode-hook #'electric-pair-local-mode)
+
+;;; Dotnet CLI integration
+
+(use-package sharper
+  :ensure t
+  :bind ("C-c d" . sharper-main-transient))
 
 ;;; markdown mode
 (use-package markdown-mode

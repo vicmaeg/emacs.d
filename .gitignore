@@ -5,3 +5,5 @@ eln-cache/
 history
 projects
 elpa/
+transient/
+tree-sitter/
