@@ -19,6 +19,26 @@
                (display-buffer-no-window)
                (allow-no-window . t)))
 
+;; use ripgrep
+
+(setq xref-search-program 'ripgrep)
+(setq grep-command "rg -nS --no-heading "
+      grep-use-null-device nil)
+
+;;; Performance tweaks
+
+;; Defer syntax highlighting until you stop typing — reduces micro-stutters
+;; in large buffers and tree-sitter modes
+(setq redisplay-skip-fontification-on-input t)
+
+;; Increase process output buffer to 4MB — modern LSP servers (rust-analyzer,
+;; clangd) send large responses and this avoids many small reads
+(setq read-process-output-max (* 4 1024 1024))
+
+;; Don't render cursors or highlight selections in non-focused windows
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+
 ;;; Basic behaviour
 
 (use-package delsel
@@ -51,6 +71,15 @@ The DWIM behaviour of this command is as follows:
 
 (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
 
+;;; Configure backups and autosave folders
+
+(setq backup-directory-alist
+      `(("." . ,(locate-user-emacs-file "backups/"))))
+(setq auto-save-file-name-transforms
+      `((".*" ,(locate-user-emacs-file "auto-save/") t)))
+
+
+
 ;;; Tweak the looks of Emacs
 
 (let ((mono-spaced-font "Monospace")
@@ -60,9 +89,12 @@ The DWIM behaviour of this command is as follows:
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
 
 (use-package modus-themes
+  :ensure t)
+
+(use-package gruber-darker-theme
   :ensure t
   :config
-  (load-theme 'modus-vivendi-tinted :no-confirm-loading))
+  (load-theme 'gruber-darker :no-confirm-loading))
 
 ;; Remember to do M-x and run `nerd-icons-install-fonts' to get the
 ;; font files.  Then restart Emacs to see the effect.
@@ -90,39 +122,134 @@ The DWIM behaviour of this command is as follows:
 
 (use-package vertico
   :ensure t
-  :hook (after-init . vertico-mode))
+  :hook (after-init . vertico-mode)
+  :config
+  (setq vertico-cycle t)
+  (setq vertico-resize t))
 
 (use-package marginalia
   :ensure t
-  :hook (after-init . marginalia-mode))
+  :hook (after-init . marginalia-mode)
+  :config
+  (setq marginalia-align-max-width 80)
+  (setq marginalia-align-separator 15))
 
 (use-package orderless
   :ensure t
   :config
   (setq completion-styles '(orderless basic))
+  ;; Eglot sets `flex` for its own categories; override so Orderless can
+  ;; filter LSP candidates in-buffer (see Corfu wiki: Eglot + Orderless).
   (setq completion-category-defaults nil)
-  (setq completion-category-overrides nil))
+  (setq completion-category-overrides
+        '((eglot (styles orderless))
+          (eglot-capf (styles orderless))
+          (file (styles . (partial-completion orderless)))
+          (buffer (styles . (orderless basic)))
+          (info-menu (styles . (orderless basic))))))
 
 (use-package savehist
-  :ensure nil ; it is built-in
-  :hook (after-init . savehist-mode))
+  :ensure nil
+  :hook (after-init . savehist-mode)
+  :config
+  (setq savehist-save-minibuffer-history t)
+  (add-to-list 'savehist-additional-variables 'vertico-repeat-history)
+  (add-to-list 'savehist-additional-variables 'corfu-history)
+  ;; Persist kill ring across sessions so clipboard history survives restarts
+  (add-to-list 'savehist-additional-variables 'kill-ring)
+  ;; Strip text properties from kill-ring entries before saving to keep
+  ;; the savehist file from bloating with font/overlay data
+  (add-hook 'savehist-save-hook
+            (lambda ()
+              (setq kill-ring
+                    (mapcar #'substring-no-properties
+                            (cl-remove-if-not #'stringp kill-ring))))))
+
+(use-package consult
+  :ensure t
+  :hook (completion-list-mode . consult-preview-mode)
+  :bind
+  (("C-x b" . consult-buffer)
+   ("C-x 4 b" . consult-buffer-other-window)
+   ("C-x 5 b" . consult-buffer-other-frame)
+   ("M-y" . consult-yank-pop)
+   ("M-s M-s" . consult-ripgrep)
+   ("M-s l" . consult-line)
+   ("M-s o" . consult-outline)
+   ("M-s f" . consult-find)
+   ("M-s i" . consult-imenu)
+   ("C-x M-:" . consult-complex-command))
+  :config
+  (setq consult-narrow-key "<")
+  (setq consult-line-numbers-width 4)
+  (setq consult-async-min-input 2)
+  (setq consult-async-refresh-delay 0.15)
+  (setq consult-async-input-throttle 0.2)
+  (setq consult-async-input-debounce 0.1))
+
+(use-package embark
+  :ensure t
+  :bind
+  (("C-." . embark-act)
+   ("C-;" . embark-dwim)
+   ("C-h B" . embark-bindings)
+   ("C-x K" . embark-kill-buffer-and-window))
+  :config
+  (setq embark-prompter 'embark-keymap-prompter)
+  (setq embark-quit-after-action t))
+
+(use-package embark-consult
+  :ensure t
+  :hook
+  (embark-collect-mode . consult-preview-minor-mode))
 
 (use-package corfu
   :ensure t
   :hook (after-init . global-corfu-mode)
-  :bind (:map corfu-map ("<tab>" . corfu-complete))
+  :bind
+  (:map corfu-map
+        ("<tab>" . corfu-complete)
+        ("M-m" . corfu-move-to-minibuffer)
+        ("M-q" . corfu-info-documentation))
   :config
   (setq tab-always-indent 'complete)
   (setq corfu-preview-current nil)
   (setq corfu-min-width 20)
-
+  (setq corfu-max-width 80)
   (setq corfu-popupinfo-delay '(1.25 . 0.5))
-  (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
+  (corfu-popupinfo-mode 1)
+
+  ;; Pop up completions while typing (Eglot + Corfu expect fresh sessions).
+  (setq corfu-auto t)
+  (setq corfu-auto-delay 0.2)
 
   ;; Sort by input history (no need to modify `corfu-sort-function').
   (with-eval-after-load 'savehist
     (corfu-history-mode 1)
     (add-to-list 'savehist-additional-variables 'corfu-history)))
+
+(defun corfu-move-to-minibuffer ()
+  "Move current completion to minibuffer."
+  (interactive)
+  (when (completion-in-region--data)
+    (let ((completion (thing-at-point 'symbol)))
+      (corfu-quit)
+      (minibuffer-with-setup-hook
+          (lambda ()
+            (insert completion))
+        (call-interactively #'embark-act)))))
+
+(advice-add #'eglot-completion-at-point :around #'cape-wrap-buster)
+
+;;; Kill ring and clipboard improvements
+
+;; Save clipboard content into the kill ring before overwriting it, so
+;; C-y/M-y can recover text copied from external programs
+(setq save-interprogram-paste-before-kill t)
+
+;; Don't save duplicate entries in the kill ring — killing the same text
+;; multiple times won't waste kill-ring slots
+(setq kill-do-not-save-duplicates t)
 
 ;;; The file manager (Dired)
 
@@ -136,7 +263,8 @@ The DWIM behaviour of this command is as follows:
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
-  (setq dired-dwim-target t))
+  (setq dired-dwim-target t)
+  (setq dired-kill-when-opening-new-dired-buffer t))
 
 (use-package dired-subtree
   :ensure t
@@ -158,3 +286,179 @@ The DWIM behaviour of this command is as follows:
   (setq trashed-use-header-line t)
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+
+;;; denote configuration
+
+(use-package denote
+  :ensure t
+  :hook (dired-mode . denote-dired-mode)
+  :bind
+  (("C-c n n" . denote)
+   ("C-c n r" . denote-rename-file)
+   ("C-c n R" . denote-rename-file-using-front-matter)
+   ("C-c n l" . denote-link)
+   ("C-c n L" . denote-add-links)
+   ("C-c n b" . denote-backlinks)
+   ("C-c n d" . denote-dired)
+   ("C-c n g" . denote-grep)
+   ("C-c n j" . denote-journal-new-or-existing-entry)
+   ("C-c n J" . denote-journal-new-entry)
+   ("C-c n f" . consult-denote-find)
+   ("C-c n s" . consult-denote-grep))
+  :config
+  (setq denote-directory (expand-file-name "~/org/"))
+  (setq denote-file-type 'org)
+  (setq denote-save-buffers nil)
+  (setq denote-known-keywords '("journal" "note" "task" "project"))
+  (setq denote-infer-keywords t)
+  (setq denote-sort-keywords t)
+  (setq denote-prompts '(title keywords))
+  (setq denote-date-prompt-use-org-read-date t)
+  (denote-rename-buffer-mode 1))
+
+(use-package denote-journal
+  :ensure t
+  :after denote
+  :config
+  (setq denote-journal-directory (expand-file-name "journal" denote-directory))
+  (setq denote-journal-keyword "journal")
+  (setq denote-journal-title-format 'day-date-month-year)
+  (setq denote-journal-interval 'daily)
+  (defun my-denote-journal-insert-template ()
+    (goto-char (point-max))
+    (insert "\n* Do today\n\n\n* Meeting notes\n\n\n* Learnings for the day\n"))
+  (add-hook 'denote-journal-hook #'my-denote-journal-insert-template))
+
+(use-package denote-markdown
+  :ensure t
+  :after denote
+  :config
+  (setq denote-markdown-use-markdown-fontification t))
+
+(use-package consult-denote
+  :ensure t
+  :after (denote consult)
+  :config
+  (consult-denote-mode 1))
+
+;;; Editing improvements
+
+;; Automatically chmod +x files that start with a shebang line on save
+(add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
+
+;; Use string syntax in re-builder instead of painful double-escaped read syntax
+(setq reb-re-syntax 'string)
+
+;; Prevent ffap from pinging hostnames — avoids multi-second hangs on slow
+;; or firewalled networks when find-file-at-point sees something.com-like text
+(setq ffap-machine-p-known 'reject)
+
+;;; org mode configuration
+
+(setq org-agenda-files '("~/org" "~/org/journal"))
+
+;;; Window improvements
+
+;; Resize all windows proportionally when splitting — produces balanced
+;; layouts instead of one tiny window among large ones
+(setq window-combination-resize t)
+
+;; Make C-x 1 toggleable: press once to go single-window, press again
+;; to restore the previous layout
+(winner-mode +1)
+
+(defun toggle-delete-other-windows ()
+  "Delete other windows in frame if any, or restore previous window config."
+  (interactive)
+  (if (and winner-mode
+           (equal (selected-window) (next-window)))
+      (winner-undo)
+    (delete-other-windows)))
+
+(global-set-key (kbd "C-x 1") #'toggle-delete-other-windows)
+
+;;; project configuration
+
+(setq project-vc-extra-root-markers '("fourthline.yaml"))
+
+;;; version control
+
+(use-package magit
+  :ensure t)
+
+;;; Language Servers configurations
+
+(use-package cape
+  :ensure t
+  :defer t)
+
+;; Built into Emacs 29+; on older versions install `eglot' from GNU ELPA.
+(use-package eglot
+  :ensure nil
+  :defer t
+  ;; When non-nil, kill the LSP process after the last managed buffer closes.
+  ;; Default nil keeps servers running so reopening a file reconnects quickly.
+  :custom (eglot-autoshutdown t)
+  :config
+  ;; Corfu caches the completion table; Eglot does not refresh it each edit.
+  ;; `cape-wrap-buster' re-fetches candidates from the LSP when needed.
+  (require 'cape)
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster))
+
+;;; Tree-sitter configuration
+
+(use-package treesit-auto
+  :ensure t
+  :custom
+  (treesit-auto-install 'prompt)  ; Ask before installing grammars
+  :config
+  ;; Add C# recipe for treesit-auto
+  (add-to-list 'treesit-auto-recipe-list
+               (make-treesit-auto-recipe
+                :lang 'c-sharp
+                :ts-mode 'csharp-ts-mode
+                :remap 'csharp-mode
+                :url "https://github.com/tree-sitter/tree-sitter-c-sharp"
+                :source-dir "src"))
+  ;; Register tree-sitter modes for all supported languages
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  ;; Enable global mode
+  (global-treesit-auto-mode))
+
+;; Ensure eglot works with csharp-ts-mode
+(add-hook 'csharp-ts-mode-hook #'eglot-ensure)
+
+;; Enable electric-pair-mode for better brace handling in C#
+(add-hook 'csharp-ts-mode-hook #'electric-pair-local-mode)
+
+;;; Dotnet CLI integration
+
+(use-package sharper
+  :ensure t
+  :bind ("C-c d" . sharper-main-transient))
+
+;;; Miscellaneous improvements
+
+;; After the first C-u C-SPC, keep pressing just C-SPC to pop more marks
+;; — makes mark-ring navigation much faster
+(setq set-mark-command-repeat-pop t)
+
+;; Auto-select help windows so the cursor jumps there immediately after
+;; C-h f, C-h v, etc. — no more C-x o every time
+(setq help-window-select t)
+
+;; Remember cursor position in files and recenter after restoring it,
+;; so you're not stuck at the bottom of the window when reopening a file
+(save-place-mode 1)
+(advice-add 'save-place-find-file-hook :after
+            (lambda (&rest _)
+              (when buffer-file-name (ignore-errors (recenter)))))
+
+;;; markdown mode
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "pandoc")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
+
