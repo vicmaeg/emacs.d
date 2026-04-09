@@ -25,6 +25,20 @@
 (setq grep-command "rg -nS --no-heading "
       grep-use-null-device nil)
 
+;;; Performance tweaks
+
+;; Defer syntax highlighting until you stop typing — reduces micro-stutters
+;; in large buffers and tree-sitter modes
+(setq redisplay-skip-fontification-on-input t)
+
+;; Increase process output buffer to 4MB — modern LSP servers (rust-analyzer,
+;; clangd) send large responses and this avoids many small reads
+(setq read-process-output-max (* 4 1024 1024))
+
+;; Don't render cursors or highlight selections in non-focused windows
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+
 ;;; Basic behaviour
 
 (use-package delsel
@@ -140,7 +154,16 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq savehist-save-minibuffer-history t)
   (add-to-list 'savehist-additional-variables 'vertico-repeat-history)
-  (add-to-list 'savehist-additional-variables 'corfu-history))
+  (add-to-list 'savehist-additional-variables 'corfu-history)
+  ;; Persist kill ring across sessions so clipboard history survives restarts
+  (add-to-list 'savehist-additional-variables 'kill-ring)
+  ;; Strip text properties from kill-ring entries before saving to keep
+  ;; the savehist file from bloating with font/overlay data
+  (add-hook 'savehist-save-hook
+            (lambda ()
+              (setq kill-ring
+                    (mapcar #'substring-no-properties
+                            (cl-remove-if-not #'stringp kill-ring))))))
 
 (use-package consult
   :ensure t
@@ -217,6 +240,16 @@ The DWIM behaviour of this command is as follows:
         (call-interactively #'embark-act)))))
 
 (advice-add #'eglot-completion-at-point :around #'cape-wrap-buster)
+
+;;; Kill ring and clipboard improvements
+
+;; Save clipboard content into the kill ring before overwriting it, so
+;; C-y/M-y can recover text copied from external programs
+(setq save-interprogram-paste-before-kill t)
+
+;; Don't save duplicate entries in the kill ring — killing the same text
+;; multiple times won't waste kill-ring slots
+(setq kill-do-not-save-duplicates t)
 
 ;;; The file manager (Dired)
 
@@ -308,9 +341,41 @@ The DWIM behaviour of this command is as follows:
   :config
   (consult-denote-mode 1))
 
+;;; Editing improvements
+
+;; Automatically chmod +x files that start with a shebang line on save
+(add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
+
+;; Use string syntax in re-builder instead of painful double-escaped read syntax
+(setq reb-re-syntax 'string)
+
+;; Prevent ffap from pinging hostnames — avoids multi-second hangs on slow
+;; or firewalled networks when find-file-at-point sees something.com-like text
+(setq ffap-machine-p-known 'reject)
+
 ;;; org mode configuration
 
 (setq org-agenda-files '("~/org" "~/org/journal"))
+
+;;; Window improvements
+
+;; Resize all windows proportionally when splitting — produces balanced
+;; layouts instead of one tiny window among large ones
+(setq window-combination-resize t)
+
+;; Make C-x 1 toggleable: press once to go single-window, press again
+;; to restore the previous layout
+(winner-mode +1)
+
+(defun toggle-delete-other-windows ()
+  "Delete other windows in frame if any, or restore previous window config."
+  (interactive)
+  (if (and winner-mode
+           (equal (selected-window) (next-window)))
+      (winner-undo)
+    (delete-other-windows)))
+
+(global-set-key (kbd "C-x 1") #'toggle-delete-other-windows)
 
 ;;; project configuration
 
@@ -371,6 +436,23 @@ The DWIM behaviour of this command is as follows:
 (use-package sharper
   :ensure t
   :bind ("C-c d" . sharper-main-transient))
+
+;;; Miscellaneous improvements
+
+;; After the first C-u C-SPC, keep pressing just C-SPC to pop more marks
+;; — makes mark-ring navigation much faster
+(setq set-mark-command-repeat-pop t)
+
+;; Auto-select help windows so the cursor jumps there immediately after
+;; C-h f, C-h v, etc. — no more C-x o every time
+(setq help-window-select t)
+
+;; Remember cursor position in files and recenter after restoring it,
+;; so you're not stuck at the bottom of the window when reopening a file
+(save-place-mode 1)
+(advice-add 'save-place-find-file-hook :after
+            (lambda (&rest _)
+              (when buffer-file-name (ignore-errors (recenter)))))
 
 ;;; markdown mode
 (use-package markdown-mode
