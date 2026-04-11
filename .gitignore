@@ -8,3 +8,5 @@ elpa/
 transient/
 tree-sitter/
 places
+.cache/
+.lsp-session-v1

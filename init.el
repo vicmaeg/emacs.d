@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (setq custom-file (locate-user-emacs-file "custom.el"))
 (load custom-file :no-error-if-file-is-missing)
 
@@ -142,9 +143,7 @@ The DWIM behaviour of this command is as follows:
   ;; filter LSP candidates in-buffer (see Corfu wiki: Eglot + Orderless).
   (setq completion-category-defaults nil)
   (setq completion-category-overrides
-        '((eglot (styles orderless))
-          (eglot-capf (styles orderless))
-          (file (styles . (partial-completion orderless)))
+        '((file (styles . (partial-completion orderless)))
           (buffer (styles . (orderless basic)))
           (info-menu (styles . (orderless basic))))))
 
@@ -238,8 +237,6 @@ The DWIM behaviour of this command is as follows:
           (lambda ()
             (insert completion))
         (call-interactively #'embark-act)))))
-
-(advice-add #'eglot-completion-at-point :around #'cape-wrap-buster)
 
 ;;; Kill ring and clipboard improvements
 
@@ -388,22 +385,34 @@ The DWIM behaviour of this command is as follows:
 
 ;;; Language Servers configurations
 
-(use-package cape
-  :ensure t
-  :defer t)
+;;;; LSP Mode with csharp-roslyn
 
-;; Built into Emacs 29+; on older versions install `eglot' from GNU ELPA.
-(use-package eglot
-  :ensure nil
-  :defer t
-  ;; When non-nil, kill the LSP process after the last managed buffer closes.
-  ;; Default nil keeps servers running so reopening a file reconnects quickly.
-  :custom (eglot-autoshutdown t)
+(use-package lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :hook (csharp-ts-mode . lsp-deferred)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
   :config
-  ;; Corfu caches the completion table; Eglot does not refresh it each edit.
-  ;; `cape-wrap-buster' re-fetches candidates from the LSP when needed.
-  (require 'cape)
-  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster))
+  (setq lsp-log-io nil)
+  (setq lsp-idle-delay 0.5)
+  (setq lsp-completion-provider :capf)
+  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-enable-on-type-formatting nil)
+  (setq lsp-enable-code-lens nil)
+  (setq lsp-signature-auto-activate nil)
+  (setq lsp-modeline-code-actions-enable nil)
+  (setq lsp-modeline-diagnostics-enable nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-diagnostics-provider :flycheck)
+  (setq lsp-roslyn-server-log-level "Warning")
+  (lsp-enable-which-key-integration))
+
+(use-package which-key
+  :ensure nil
+  :demand t
+  :config
+  (which-key-mode))
 
 ;;; Tree-sitter configuration
 
@@ -424,9 +433,6 @@ The DWIM behaviour of this command is as follows:
   (treesit-auto-add-to-auto-mode-alist 'all)
   ;; Enable global mode
   (global-treesit-auto-mode))
-
-;; Ensure eglot works with csharp-ts-mode
-(add-hook 'csharp-ts-mode-hook #'eglot-ensure)
 
 ;; Enable electric-pair-mode for better brace handling in C#
 (add-hook 'csharp-ts-mode-hook #'electric-pair-local-mode)
