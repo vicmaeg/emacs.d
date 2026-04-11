@@ -406,6 +406,7 @@ The DWIM behaviour of this command is as follows:
   (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-diagnostics-provider :flycheck)
   (setq lsp-roslyn-server-log-level "Warning")
+  (setq gc-cons-threshold 100000000)
   (lsp-enable-which-key-integration))
 
 (use-package which-key
@@ -436,6 +437,10 @@ The DWIM behaviour of this command is as follows:
 
 ;; Enable electric-pair-mode for better brace handling in C#
 (add-hook 'csharp-ts-mode-hook #'electric-pair-local-mode)
+
+(use-package flycheck
+  :ensure t
+  :hook (csharp-ts-mode . flycheck-mode))
 
 ;;; Dotnet CLI integration
 
