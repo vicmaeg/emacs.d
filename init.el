@@ -424,8 +424,6 @@ The DWIM behaviour of this command is as follows:
   (gc-cons-threshold 100000000)
   (lsp-enable-which-key-integration))
 
-(require 'lsp-mode)
-
 (defun custom-capabilities-override (&optional custom-capabilities)
   "Return the client capabilities appending CUSTOM-CAPABILITIES."
   (append
