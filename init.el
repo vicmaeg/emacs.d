@@ -83,8 +83,8 @@ The DWIM behaviour of this command is as follows:
 
 ;;; Tweak the looks of Emacs
 
-(let ((mono-spaced-font "Monospace")
-      (proportionately-spaced-font "Sans"))
+(let ((mono-spaced-font "Iosevka Nerd Font Mono")
+      (proportionately-spaced-font "Iosevka Nerd Font Propo"))
   (set-face-attribute 'default nil :family mono-spaced-font :height 100)
   (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
   (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
