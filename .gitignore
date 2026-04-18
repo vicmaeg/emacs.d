@@ -10,3 +10,4 @@ tree-sitter/
 places
 .cache/
 .lsp-session-v1
+/.agent-shell/

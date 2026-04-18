@@ -588,6 +588,29 @@ The DWIM behaviour of this command is as follows:
             (lambda (&rest _)
               (when buffer-file-name (ignore-errors (recenter)))))
 
+;;; agent-shell (opencode)
+
+(use-package agent-shell
+  :ensure t
+  :config
+  (setq agent-shell-opencode-authentication
+        (agent-shell-opencode-make-authentication :none t))
+  (setq agent-shell-preferred-agent-config
+        (agent-shell-opencode-make-agent-config)))
+
+;;; Terminal emulator
+
+(use-package eat
+  :ensure t
+  :commands (eat eat-other-window)
+  :bind (("C-c t" . eat-other-window))
+  :config
+  (setq eat-kill-buffer-on-exit t)
+  (setq eat-term-scrollback-size 10000)
+  (setq eat-term-scroll-resize-mode 'resize)
+  (setq eat-enable-blinking-cursor nil)
+  (setq eat-shell (or (getenv "SHELL") "/bin/bash")))
+
 ;;; markdown mode
 (use-package markdown-mode
   :ensure t
