@@ -83,7 +83,7 @@ The DWIM behaviour of this command is as follows:
 
 ;;; Tweak the looks of Emacs
 
-(let ((mono-spaced-font "Jetbrains Mono")
+(let ((mono-spaced-font "JetBrains Mono")
       (proportionately-spaced-font "Sans"))
   (set-face-attribute 'default nil :family mono-spaced-font :height 100)
   (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
@@ -588,13 +588,15 @@ The DWIM behaviour of this command is as follows:
             (lambda (&rest _)
               (when buffer-file-name (ignore-errors (recenter)))))
 
-;;; agent-shell (opencode)
+;;; agent-shell
 
 (use-package agent-shell
   :ensure t
   :config
   (setq agent-shell-opencode-authentication
         (agent-shell-opencode-make-authentication :none t))
+  (setq agent-shell-opencode-default-model-id "opencode-go/glm-5.1")
+  (setq agent-shell-cursor-acp-command '("agent" "acp"))
   (setq agent-shell-preferred-agent-config
         (agent-shell-opencode-make-agent-config)))
 
