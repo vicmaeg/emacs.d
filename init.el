@@ -395,6 +395,20 @@ The DWIM behaviour of this command is as follows:
   (unless (display-graphic-p)
     (diff-hl-margin-mode 1)))
 
+;;; Jump to visible text
+
+(use-package avy
+  :ensure t
+  :config
+  (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?q ?w ?e ?r ?t ?y ?u ?i ?o ?p ?z ?x ?c ?v ?b ?n ?m))
+  (setq avy-style 'pre)
+  (setq avy-all-windows nil)
+  (setq avy-single-candidate-action nil)
+  :bind
+  (("C-;" . avy-goto-char-timer)
+   ("M-g f" . avy-goto-line)
+   ("M-g w" . avy-goto-word-1)))
+
 ;;; Selection expansion
 
 (use-package expand-region

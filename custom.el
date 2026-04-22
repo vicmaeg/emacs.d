@@ -15,7 +15,7 @@
      "8fbf2d585f1138caaafa9e523fa3a20614c1d1dcc6002c9808c3e40028e21df4"
      default))
  '(package-selected-packages
-   '(agent-shell consult-denote corfu denote-journal denote-markdown
+   '(agent-shell avy consult-denote corfu denote-journal denote-markdown
 		 diff-hl dired-subtree eat embark-consult
 		 expand-region ghostel gruber-darker-theme lsp-ui
 		 magit marginalia modus-themes nerd-icons-completion
