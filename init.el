@@ -375,6 +375,14 @@ The DWIM behaviour of this command is as follows:
 
 (setq org-agenda-files '("~/org" "~/org/journal"))
 
+;;; Recent files
+
+(use-package recentf
+  :ensure nil
+  :hook (after-init . recentf-mode)
+  :config
+  (setq recentf-max-saved-items 200))
+
 ;;; Window improvements
 
 ;; Resize all windows proportionally when splitting — produces balanced
