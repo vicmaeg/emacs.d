@@ -81,6 +81,13 @@ The DWIM behaviour of this command is as follows:
 
 
 
+;;; Line numbers
+
+(setq-default display-line-numbers-type t)
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(add-hook 'text-mode-hook #'display-line-numbers-mode)
+(global-hl-line-mode 1)
+
 ;;; Tweak the looks of Emacs
 
 (let ((mono-spaced-font "JetBrains Mono")
