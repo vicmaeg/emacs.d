@@ -609,16 +609,29 @@ The DWIM behaviour of this command is as follows:
 
 ;;; Terminal emulator
 
-(use-package eat
+(use-package ghostel
   :ensure t
-  :commands (eat eat-other-window)
-  :bind (("C-c t" . eat-other-window))
+  :commands (ghostel)
+  :bind
+  (("C-c t" . ghostel)
+   ("C-x p t" . ghostel-project))
   :config
-  (setq eat-kill-buffer-on-exit t)
-  (setq eat-term-scrollback-size 10000)
-  (setq eat-term-scroll-resize-mode 'resize)
-  (setq eat-enable-blinking-cursor nil)
-  (setq eat-shell (or (getenv "SHELL") "/bin/bash")))
+  (setq ghostel-shell (or (getenv "SHELL") "/bin/bash"))
+  (setq ghostel-kill-buffer-on-exit t)
+  (setq ghostel-max-scrollback 10000)
+  (setq ghostel-enable-url-detection t)
+  (setq ghostel-enable-file-detection t)
+  (setq ghostel-adaptive-fps t)
+  (setq ghostel-enable-osc52 t))
+
+(require 'ghostel-compile)
+(global-set-key (kbd "C-c c") #'ghostel-compile)
+
+(require 'ghostel-eshell)
+(require 'em-term)
+(add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
+(add-to-list 'eshell-visual-commands "opencode")
+(add-to-list 'eshell-visual-commands "cursor")
 
 ;;; markdown mode
 (use-package markdown-mode
@@ -627,4 +640,3 @@ The DWIM behaviour of this command is as follows:
   :init (setq markdown-command "pandoc")
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
-
