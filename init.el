@@ -395,6 +395,14 @@ The DWIM behaviour of this command is as follows:
   (unless (display-graphic-p)
     (diff-hl-margin-mode 1)))
 
+;;; Selection expansion
+
+(use-package expand-region
+  :ensure t
+  :bind
+  (("C-=" . er/expand-region)
+   ("C--" . er/contract-region)))
+
 ;;; Window improvements
 
 ;; Resize all windows proportionally when splitting — produces balanced

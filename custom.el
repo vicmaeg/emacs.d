@@ -14,7 +14,13 @@
      "a75fc55d480accd6f651d1bae492b7ab4c5b28894350b63ef39bf947bb8fd453"
      "8fbf2d585f1138caaafa9e523fa3a20614c1d1dcc6002c9808c3e40028e21df4"
      default))
- '(package-selected-packages nil))
+ '(package-selected-packages
+   '(agent-shell consult-denote corfu denote-journal denote-markdown
+		 diff-hl dired-subtree eat embark-consult
+		 expand-region ghostel gruber-darker-theme lsp-ui
+		 magit marginalia modus-themes nerd-icons-completion
+		 nerd-icons-corfu nerd-icons-dired orderless sharper
+		 trashed treesit-auto vertico yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
