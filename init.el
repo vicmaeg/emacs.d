@@ -383,6 +383,18 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq recentf-max-saved-items 200))
 
+;;; Version control indicators in buffer
+
+(use-package diff-hl
+  :ensure t
+  :hook ((after-init . global-diff-hl-mode)
+         (dired-mode . diff-hl-dired-mode))
+  :config
+  (setq diff-hl-side 'left)
+  ;; Use margin characters in terminal, fringe bitmaps in GUI
+  (unless (display-graphic-p)
+    (diff-hl-margin-mode 1)))
+
 ;;; Window improvements
 
 ;; Resize all windows proportionally when splitting — produces balanced
