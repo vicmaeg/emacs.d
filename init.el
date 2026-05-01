@@ -8,7 +8,6 @@
 (package-initialize)
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("gnu-devel" . "https://elpa.gnu.org/devel/"))
 
 (when (< emacs-major-version 29)
   (unless (package-installed-p 'use-package)
@@ -448,16 +447,6 @@ The DWIM behaviour of this command is as follows:
   :ensure t)
 
 ;;; Language Servers (see lisp/lsp-csharp.el)
-
-(defun my-install-devel-eglot ()
-  "Install/upgrade eglot from GNU-devel ELPA for pull diagnostics support.
-The devel eglot (1.23+) supports `textDocument/diagnostic' (pull
-diagnostics), which the stock Emacs 30 eglot does not.  Run this
-once; the package overrides the built-in."
-  (interactive)
-  (let ((package-install-upgrade-built-in t))
-    (package-refresh-contents)
-    (package-install 'eglot)))
 
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))
 (require 'lsp-csharp)
