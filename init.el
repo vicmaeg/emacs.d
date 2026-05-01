@@ -538,6 +538,9 @@ The DWIM behaviour of this command is as follows:
 (add-to-list 'eshell-visual-commands "opencode")
 (add-to-list 'eshell-visual-commands "cursor")
 
+(require 'ghostel-tab)
+(global-set-key (kbd "C-c T") #'ghostel-tab)
+
 ;;; markdown mode
 (use-package markdown-mode
   :ensure t
