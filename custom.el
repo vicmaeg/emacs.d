@@ -17,10 +17,11 @@
  '(package-selected-packages
    '(agent-shell avy consult-denote corfu denote-journal denote-markdown
 		 diff-hl dired-subtree eat eglot embark-consult
-		 expand-region ghostel gruber-darker-theme lsp-ui
-		 magit marginalia modus-themes nerd-icons-completion
-		 nerd-icons-corfu nerd-icons-dired orderless sharper
-		 trashed treesit-auto vertico yasnippet-snippets)))
+		 expand-region ghostel gruber-darker-theme lsp-mode
+		 lsp-ui magit marginalia modus-themes
+		 nerd-icons-completion nerd-icons-corfu
+		 nerd-icons-dired orderless sharper trashed
+		 treesit-auto vertico yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

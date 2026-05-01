@@ -1,3 +1,4 @@
+(setenv "LSP_USE_PLISTS" "true")
 (setq inhibit-startup-screen t)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
