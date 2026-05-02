@@ -437,6 +437,23 @@ The DWIM behaviour of this command is as follows:
 
 (global-set-key (kbd "C-x 1") #'toggle-delete-other-windows)
 
+;;; Tab bar improvements
+;; Only show the tab bar when there is more than one tab.
+;; This keeps the UI clean until you actually need tabs.
+(setq tab-bar-show 1)
+
+;; Remove the [x] close and [+] new-tab buttons for a cleaner look.
+(setq tab-bar-close-button-show nil)
+(setq tab-bar-new-button-show nil)
+
+;; Show just the tab names, no extra widgets.
+(setq tab-bar-format '(tab-bar-format-tabs tab-bar-separator))
+
+;; Make the tab bar compact and remove the default box borders.
+(set-face-attribute 'tab-bar nil :height 0.9 :box nil)
+(set-face-attribute 'tab-bar-tab nil :box nil :weight 'bold)
+(set-face-attribute 'tab-bar-tab-inactive nil :box nil)
+
 ;;; project configuration
 
 (setq project-vc-extra-root-markers '("fourthline.yaml"))
