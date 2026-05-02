@@ -12,3 +12,4 @@ places
 .lsp-session-v1
 /.agent-shell/
 recentf
+*.elc
