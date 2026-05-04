@@ -13,3 +13,5 @@ places
 /.agent-shell/
 recentf
 *.elc
+/url
+/eshell

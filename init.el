@@ -456,7 +456,7 @@ The DWIM behaviour of this command is as follows:
 
 ;;; project configuration
 
-(setq project-vc-extra-root-markers '("fourthline.yaml"))
+(setq project-vc-extra-root-markers '("fourthline.yaml" ".project.el"))
 
 ;;; version control
 
