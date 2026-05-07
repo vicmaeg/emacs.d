@@ -560,6 +560,25 @@ The DWIM behaviour of this command is as follows:
 (global-set-key (kbd "C-c T") #'ghostel-terminal-tab)
 (global-set-key (kbd "C-c a") #'ghostel-agent-tab)
 
+(defun my/project-magit-status ()
+  "Run `magit-status' in the root of the current project."
+  (interactive)
+  (let ((default-directory (project-root (project-current t))))
+    (magit-status)))
+
+(with-eval-after-load 'project
+  (define-key project-prefix-map (kbd "a") #'ghostel-agent-project-cursor)
+  (define-key project-prefix-map (kbd "A") #'ghostel-agent-project-opencode)
+  (let ((found-magit nil))
+    (dolist (entry project-switch-commands)
+      (when (and (listp entry) (eq (car entry) #'magit-status))
+        (setq found-magit t)))
+    (unless found-magit
+      (add-to-list 'project-switch-commands '(my/project-magit-status "Magit" ?m))))
+  (add-to-list 'project-switch-commands '(ghostel-project "Terminal" ?t))
+  (add-to-list 'project-switch-commands '(ghostel-agent-project-cursor "Agent (Cursor)" ?a))
+  (add-to-list 'project-switch-commands '(ghostel-agent-project-opencode "Agent (OpenCode)" ?A)))
+
 ;;; markdown mode
 (use-package markdown-mode
   :ensure t

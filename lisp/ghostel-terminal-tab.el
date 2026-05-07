@@ -10,6 +10,13 @@
        (derived-mode-p 'ghostel-mode)))
    (buffer-list)))
 
+(defun ghostel-terminal-tab--get-terminal-buffers ()
+  "Return a list of live ghostel buffers, excluding AI agent buffers."
+  (cl-remove-if-not
+   (lambda (b)
+     (not (string-match-p "\\`\\*AI Agent" (buffer-name b))))
+   (ghostel-terminal-tab--get-buffers)))
+
 (defun ghostel-terminal-tab--layout (buffers)
   "Arrange BUFFERS side-by-side in the current tab."
   (delete-other-windows)
@@ -29,7 +36,7 @@ If no ghostel buffers exist, display a message.  If the \"Terminals\"
 tab already exists, switch to it and refresh the layout."
   (interactive)
   (require 'ghostel)
-  (let ((bufs (ghostel-terminal-tab--get-buffers)))
+  (let ((bufs (ghostel-terminal-tab--get-terminal-buffers)))
     (if (null bufs)
         (message "No ghostel buffers")
       (if (ghostel-terminal-tab--tab-named-p "Terminals")
