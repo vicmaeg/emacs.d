@@ -72,12 +72,39 @@ The DWIM behaviour of this command is as follows:
 
 (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
 
+(autoload 'zap-up-to-char "misc"
+  "Kill up to, but not including ARGth occurrence of CHAR." t)
+(global-set-key (kbd "M-/") #'hippie-expand)
+(global-set-key (kbd "C-x C-b") #'ibuffer)
+(global-set-key (kbd "M-z") #'zap-up-to-char)
+
 ;;; Configure backups and autosave folders
 
 (setq backup-directory-alist
       `(("." . ,(locate-user-emacs-file "backups/"))))
 (setq auto-save-file-name-transforms
       `((".*" ,(locate-user-emacs-file "auto-save/") t)))
+
+;;; Better defaults
+
+(show-paren-mode 1)
+
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'forward)
+
+(setq-default indent-tabs-mode nil)
+
+(setq apropos-do-all t
+      mouse-yank-at-point t
+      require-final-newline t
+      visible-bell t
+      load-prefer-newer t
+      backup-by-copying t
+      frame-inhibit-implied-resize t
+      completion-ignore-case t
+      read-file-name-completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      ediff-window-setup-function 'ediff-setup-windows-plain)
 
 ;;; Line numbers
 
