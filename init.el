@@ -511,6 +511,22 @@ The DWIM behaviour of this command is as follows:
   (("C-=" . er/expand-region)
    ("C--" . er/contract-region)))
 
+;;; Multiple cursors
+
+(use-package multiple-cursors
+  :ensure t
+  :bind
+  (("C-c m l" . mc/edit-lines)
+   ("C-c m n" . mc/mark-next-like-this)
+   ("C-c m p" . mc/mark-previous-like-this)
+   ("C-c m a" . mc/mark-all-like-this)
+   ("C-c m N" . mc/unmark-next-like-this)
+   ("C-c m P" . mc/unmark-previous-like-this)
+   ("C-c m s" . mc/skip-to-next-like-this)
+   ("C-c m S" . mc/skip-to-previous-like-this))
+  :config
+  (setq mc/always-run-for-all t))
+
 ;;; Window improvements
 
 ;; Resize all windows proportionally when splitting — produces balanced
