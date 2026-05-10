@@ -15,12 +15,12 @@
      "8fbf2d585f1138caaafa9e523fa3a20614c1d1dcc6002c9808c3e40028e21df4"
      default))
  '(package-selected-packages
-   '(agent-shell avy consult-denote corfu denote-journal denote-markdown
-		 diff-hl dired-subtree embark-consult expand-region
-		 fontaine ghostel git-link gruber-darker-theme lsp-ui
-		 magit marginalia modus-themes nerd-icons-completion
-		 nerd-icons-corfu nerd-icons-dired orderless sharper
-		 trashed treesit-auto vertico yasnippet-snippets)))
+   '(avy consult-denote corfu denote-journal denote-markdown diff-hl
+	 dired-subtree embark-consult expand-region fontaine ghostel
+	 git-link gruber-darker-theme lsp-ui magit marginalia
+	 modus-themes nerd-icons-completion nerd-icons-corfu
+	 nerd-icons-dired orderless sharper trashed treesit-auto
+	 vertico yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
