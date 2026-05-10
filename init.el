@@ -557,6 +557,13 @@ The DWIM behaviour of this command is as follows:
 (use-package magit
   :ensure t)
 
+(use-package git-link
+  :ensure t
+  :bind
+  (("C-c g l" . git-link)
+   ("C-c g c" . git-link-commit)
+   ("C-c g h" . git-link-homepage)))
+
 ;;; Language Servers (see lisp/lsp-csharp.el)
 
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))
