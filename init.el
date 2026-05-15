@@ -607,10 +607,41 @@ The DWIM behaviour of this command is as follows:
    ("C-c g c" . git-link-commit)
    ("C-c g h" . git-link-homepage)))
 
-;;; Language Servers (see lisp/lsp-csharp.el)
+;;; Language Servers
+
+(use-package lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :config
+  (setq lsp-log-io nil)
+  (setq lsp-idle-delay 0.5)
+  (setq lsp-completion-provider :capf)
+  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-enable-on-type-formatting nil)
+  (setq lsp-enable-code-lens nil)
+  (setq lsp-enable-snippet t)
+  (setq lsp-signature-auto-activate nil)
+  (setq lsp-modeline-code-actions-enable nil)
+  (setq lsp-modeline-diagnostics-enable nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-diagnostics-provider :flymake)
+  (setq lsp-keep-workspace-alive nil)
+  (setq lsp-enable-file-watchers nil)
+  (setq lsp-response-timeout 10)
+  (setq lsp-use-plists t)
+  (setq gc-cons-threshold 100000000)
+  (setq lsp-restart 'auto-restart)
+  (setq lsp-clients-clangd-args
+        '("--clang-tidy"
+          "--header-insertion=never"
+          "--completion-style=detailed"))
+  (lsp-enable-which-key-integration))
 
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))
 (require 'lsp-csharp)
+(require 'lsp-c)
 
 (use-package which-key
   :ensure nil
