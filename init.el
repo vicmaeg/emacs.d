@@ -236,11 +236,11 @@ The DWIM behaviour of this command is as follows:
   :config
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
-(use-package nerd-icons-corfu
+(use-package nerd-icons-company
   :ensure t
-  :after corfu
+  :after company
   :config
-  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+  (add-to-list 'company-format-margin-function #'nerd-icons-company-margin))
 
 (use-package nerd-icons-dired
   :ensure t
@@ -267,8 +267,8 @@ The DWIM behaviour of this command is as follows:
   :ensure t
   :config
   (setq completion-styles '(orderless basic))
-  ;; Eglot sets `flex` for its own categories; override so Orderless can
-  ;; filter LSP candidates in-buffer (see Corfu wiki: Eglot + Orderless).
+  ;; Clear category defaults so Orderless can filter LSP candidates
+  ;; in-buffer (works with company-capf).
   (setq completion-category-defaults nil)
   (setq completion-category-overrides
         '((file (styles . (partial-completion orderless)))
@@ -281,7 +281,7 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq savehist-save-minibuffer-history t)
   (add-to-list 'savehist-additional-variables 'vertico-repeat-history)
-  (add-to-list 'savehist-additional-variables 'corfu-history)
+  (add-to-list 'savehist-additional-variables 'company-cache)
   ;; Persist kill ring across sessions so clipboard history survives restarts
   (add-to-list 'savehist-additional-variables 'kill-ring)
   ;; Strip text properties from kill-ring entries before saving to keep
@@ -330,41 +330,25 @@ The DWIM behaviour of this command is as follows:
   :hook
   (embark-collect-mode . consult-preview-minor-mode))
 
-(use-package corfu
+(use-package company
   :ensure t
-  :hook (after-init . global-corfu-mode)
+  :hook (after-init . global-company-mode)
   :bind
-  (:map corfu-map
-        ("<tab>" . corfu-complete)
-        ("M-m" . corfu-move-to-minibuffer)
-        ("M-q" . corfu-info-documentation))
+  (:map company-active-map
+        ("<tab>" . company-complete-common-or-cycle)
+        ("S-<tab>" . company-select-previous)
+        ("RET" . company-complete-selection)
+        ("M-q" . company-show-doc-buffer))
   :config
   (setq tab-always-indent 'complete)
-  (setq corfu-preview-current nil)
-  (setq corfu-min-width 20)
-  (setq corfu-max-width 80)
-  (setq corfu-popupinfo-delay '(1.25 . 0.5))
-  (corfu-popupinfo-mode 1)
-
-  ;; Pop up completions while typing (Eglot + Corfu expect fresh sessions).
-  (setq corfu-auto t)
-  (setq corfu-auto-delay 0.2)
-
-  ;; Sort by input history (no need to modify `corfu-sort-function').
-  (with-eval-after-load 'savehist
-    (corfu-history-mode 1)
-    (add-to-list 'savehist-additional-variables 'corfu-history)))
-
-(defun corfu-move-to-minibuffer ()
-  "Move current completion to minibuffer."
-  (interactive)
-  (when (completion-in-region--data)
-    (let ((completion (thing-at-point 'symbol)))
-      (corfu-quit)
-      (minibuffer-with-setup-hook
-          (lambda ()
-            (insert completion))
-         (call-interactively #'embark-act)))))
+  (setq company-minimum-prefix-length 1)
+  (setq company-idle-delay 0.2)
+  (setq company-selection-wrap-around t)
+  (setq company-tooltip-align-annotations t)
+  (setq company-tooltip-width-grow-only t)
+  (setq company-require-match nil)
+  (setq company-dabbrev-downcase nil)
+  (setq company-dabbrev-ignore-case nil))
 
 (use-package yasnippet
   :ensure t
