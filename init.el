@@ -116,12 +116,15 @@ The DWIM behaviour of this command is as follows:
 ;;; Tweak the looks of Emacs
 
 (use-package modus-themes
+  :ensure t)
+
+(use-package doom-themes
   :ensure t
   :config
-  (load-theme 'modus-vivendi :no-confirm-loading))
-
-(use-package gruber-darker-theme
-  :ensure t)
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (doom-themes-visual-bell-config)
+  (load-theme 'doom-solarized-dark :no-confirm-loading))
 
 (use-package fontaine
   :ensure t
