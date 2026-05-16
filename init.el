@@ -118,10 +118,13 @@ The DWIM behaviour of this command is as follows:
 (use-package modus-themes
   :ensure t)
 
-(use-package doom-themes
-  :ensure t
-  :config
-  (load-theme 'doom-solarized-dark :no-confirm-loading))
+(use-package ef-themes
+  :ensure t)
+
+(use-package doric-themes
+  :ensure t)
+
+(load-theme 'modus-vivendi-tinted :no-confirm-loading)
 
 (use-package fontaine
   :ensure t
