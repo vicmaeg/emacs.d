@@ -121,9 +121,6 @@ The DWIM behaviour of this command is as follows:
 (use-package doom-themes
   :ensure t
   :config
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (doom-themes-visual-bell-config)
   (load-theme 'doom-solarized-dark :no-confirm-loading))
 
 (use-package fontaine
