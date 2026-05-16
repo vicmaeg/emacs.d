@@ -36,6 +36,8 @@
 ;; clangd) send large responses and this avoids many small reads
 (setq read-process-output-max (* 4 1024 1024))
 
+(setq ring-bell-function 'ignore)
+
 ;; Don't render cursors or highlight selections in non-focused windows
 (setq-default cursor-in-non-selected-windows nil)
 (setq highlight-nonselected-windows nil)
@@ -97,7 +99,7 @@ The DWIM behaviour of this command is as follows:
 (setq apropos-do-all t
       mouse-yank-at-point t
       require-final-newline t
-      visible-bell t
+      visible-bell nil
       load-prefer-newer t
       backup-by-copying t
       frame-inhibit-implied-resize t
@@ -124,7 +126,7 @@ The DWIM behaviour of this command is as follows:
 (use-package doric-themes
   :ensure t)
 
-(load-theme 'modus-vivendi-tinted :no-confirm-loading)
+(load-theme 'modus-vivendi :no-confirm-loading)
 
 (use-package fontaine
   :ensure t
