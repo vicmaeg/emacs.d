@@ -23,6 +23,18 @@
 
 ;;; Code
 
+(require 'lsp-mode)
+(require 'lsp-roslyn)
+
+(defun lsp-csharp--maybe-start-lsp ()
+  "Start LSP for C# files, but skip decompiled metadata sources.
+Roslyn stores decompiled framework files under a system temp directory
+(e.g. /tmp/MetadataAsSource/<uuid>/...).  Opening them should not
+trigger a workspace-root prompt or a new LSP session."
+  (unless (and buffer-file-name
+               (string-match-p "MetadataAsSource" buffer-file-name))
+    (lsp-deferred)))
+
 (add-hook 'csharp-ts-mode-hook #'lsp-deferred)
 (add-hook 'csharp-ts-mode-hook #'flymake-mode)
 (add-hook 'csharp-ts-mode-hook #'electric-pair-local-mode)
@@ -43,6 +55,26 @@
 
 (advice-add 'lsp--client-capabilities :filter-return
             #'lsp-csharp--patch-capabilities)
+
+(defun lsp-csharp--roslyn-stdio-command ()
+  "Return the command to start roslyn-language-server via stdio.
+Assumes the tool was installed with:
+  dotnet tool install -g roslyn-language-server --prerelease"
+  (list "roslyn-language-server"
+        "--stdio"
+        "--logLevel" lsp-roslyn-server-log-level
+        "--clientProcessId" (number-to-string (emacs-pid))
+        "--autoLoadProjects"))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection #'lsp-csharp--roslyn-stdio-command)
+                  :priority 1
+                  :server-id 'roslyn-language-server
+                  :activation-fn (lsp-activate-on "csharp")
+                  :path->uri-fn #'lsp-roslyn--path-to-uri
+                  :uri->path-fn #'lsp-roslyn--uri-to-path
+                  :notification-handlers (ht ("workspace/projectInitializationComplete"
+                                              'lsp-roslyn--on-project-initialization-complete))))
 
 (provide 'lsp-csharp)
 ;;; lsp-csharp.el ends here
