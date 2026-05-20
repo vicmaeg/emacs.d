@@ -543,6 +543,13 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq mc/always-run-for-all t))
 
+;;; Move text
+
+(use-package move-text
+  :ensure t
+  :bind (("M-p" . move-text-up)
+         ("M-n" . move-text-down)))
+
 ;;; Window improvements
 
 ;; Resize all windows proportionally when splitting — produces balanced
@@ -665,6 +672,12 @@ The DWIM behaviour of this command is as follows:
   :bind ("C-c d" . sharper-main-transient))
 
 ;;; Miscellaneous improvements
+
+;; Auto-revert buffers when files change on disk — essential when AI agents
+;; or external tools modify files behind the scenes.
+(global-auto-revert-mode 1)
+(setq auto-revert-verbose nil)
+(setq auto-revert-check-vc-info t)
 
 ;; After the first C-u C-SPC, keep pressing just C-SPC to pop more marks
 ;; — makes mark-ring navigation much faster
