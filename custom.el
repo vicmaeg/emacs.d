@@ -32,12 +32,12 @@
      default))
  '(package-selected-packages
    '(acp avy company consult-denote denote-journal denote-markdown
-         diff-hl dired-subtree doom-themes embark-consult
+         diff-hl dired-subtree doric-themes ef-themes embark-consult
          expand-region fontaine ghostel git-link gruber-darker-theme
-         lsp-mode magit marginalia modus-themes multiple-cursors
+         lsp-mode magit marginalia move-text multiple-cursors
          nerd-icons-company nerd-icons-completion nerd-icons-dired
-         orderless popon sharper shell-maker solarized-theme trashed
-         treesit-auto vertico yasnippet-snippets)))
+         orderless popon sharper shell-maker solarized-theme tabspaces
+         trashed treesit-auto vertico yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

@@ -304,6 +304,7 @@ The DWIM behaviour of this command is as follows:
   (("C-x b" . consult-buffer)
    ("C-x 4 b" . consult-buffer-other-window)
    ("C-x 5 b" . consult-buffer-other-frame)
+   ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
    ("M-y" . consult-yank-pop)
    ("M-s M-s" . consult-ripgrep)
    ("M-s l" . consult-line)
@@ -590,6 +591,46 @@ The DWIM behaviour of this command is as follows:
 ;;; project configuration
 
 (setq project-vc-extra-root-markers '("fourthline.yaml" ".project.el"))
+
+;;; Tabspaces - workspace-centric tabs
+
+(use-package tabspaces
+  :ensure t
+  :hook (after-init . tabspaces-mode)
+  :commands (tabspaces-switch-or-create-workspace
+             tabspaces-open-or-create-project-and-workspace)
+  :custom
+  (tabspaces-default-tab "Default")
+  (tabspaces-remove-to-default t)
+  (tabspaces-include-buffers '("*scratch*"))
+  (tabspaces-initialize-project-with-todo nil)
+  ;; sessions
+  (tabspaces-session t)
+  (tabspaces-session-auto-restore t)
+  ;; additional options
+  (tabspaces-fully-resolve-paths t)
+  (tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*"))
+  (tab-bar-new-tab-choice "*scratch*")
+  :config
+  ;; Filter consult-buffer to show workspace-local buffers by default
+  (with-eval-after-load 'consult
+    ;; Hide the full buffer list (still available with "b" prefix)
+    (plist-put consult-source-buffer :hidden t)
+    (plist-put consult-source-buffer :default nil)
+    ;; Define workspace-local buffer source
+    (defvar consult--source-workspace
+      (list :name     "Workspace Buffers"
+            :narrow   ?w
+            :history  'buffer-name-history
+            :category 'buffer
+            :state    #'consult--buffer-state
+            :default  t
+            :items    (lambda () (consult--buffer-query
+                             :predicate #'tabspaces--local-buffer-p
+                             :sort 'visibility
+                             :as #'buffer-name)))
+      "Set workspace buffer list for consult-buffer.")
+    (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
 
 ;;; version control
 

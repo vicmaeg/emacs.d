@@ -17,3 +17,5 @@ recentf
 /eshell
 fontaine-latest-state.eld
 .mc-lists.el
+*-tabspaces-session.el
+tabsession.el
