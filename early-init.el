@@ -16,6 +16,12 @@
 (add-to-list 'exec-path "~/.opencode/bin/")
 (setenv "PATH" (concat "~/.opencode/bin/:" (getenv "PATH")))
 
+(let ((script (expand-file-name "~/.local/bin/init-emacs-env.sh")))
+  (when (file-executable-p script)
+    (dolist (line (split-string (shell-command-to-string script) "\n" t))
+      (when (string-match "\\`env:\\([^=]+\\)=\\(.*\\)\\'" line)
+        (setenv (match-string 1 line) (match-string 2 line))))))
+
 ;;; Performance: assume left-to-right text everywhere and skip bidirectional
 ;;; parenthesis algorithm — avoids unnecessary work on every redisplay cycle
 ;;; when you don't edit right-to-left languages
