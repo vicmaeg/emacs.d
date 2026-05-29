@@ -126,7 +126,7 @@ The DWIM behaviour of this command is as follows:
 (use-package doric-themes
   :ensure t)
 
-(load-theme 'modus-vivendi :no-confirm-loading)
+(load-theme 'ef-bio :no-confirm-loading)
 
 (use-package fontaine
   :ensure t
