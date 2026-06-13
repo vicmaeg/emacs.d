@@ -126,7 +126,10 @@ The DWIM behaviour of this command is as follows:
 (use-package doric-themes
   :ensure t)
 
-(load-theme 'ef-bio :no-confirm-loading)
+(use-package gruber-darker-theme
+  :ensure t)
+
+(load-theme 'gruber-darker :no-confirm-loading)
 
 (use-package fontaine
   :ensure t
@@ -571,66 +574,55 @@ The DWIM behaviour of this command is as follows:
 
 (global-set-key (kbd "C-x 1") #'toggle-delete-other-windows)
 
-;;; Tab bar improvements
-;; Only show the tab bar when there is more than one tab.
-;; This keeps the UI clean until you actually need tabs.
-(setq tab-bar-show 1)
-
-;; Remove the [x] close and [+] new-tab buttons for a cleaner look.
-(setq tab-bar-close-button-show nil)
-(setq tab-bar-new-button-show nil)
-
-;; Show just the tab names, no extra widgets.
-(setq tab-bar-format '(tab-bar-format-tabs tab-bar-separator))
-
-;; Make the tab bar compact and remove the default box borders.
-(set-face-attribute 'tab-bar nil :height 0.9 :box nil)
-(set-face-attribute 'tab-bar-tab nil :box nil :weight 'bold)
-(set-face-attribute 'tab-bar-tab-inactive nil :box nil)
-
 ;;; project configuration
 
 (setq project-vc-extra-root-markers '("fourthline.yaml" ".project.el"))
 
-;;; Tabspaces - workspace-centric tabs
+;;; Perspective - workspace-centric perspectives
 
-(use-package tabspaces
+(use-package perspective
   :ensure t
-  :hook (after-init . tabspaces-mode)
-  :commands (tabspaces-switch-or-create-workspace
-             tabspaces-open-or-create-project-and-workspace)
+  :bind
+  (("C-x C-b" . persp-list-buffers)
+   ("C-x k" . persp-kill-buffer*))
   :custom
-  (tabspaces-default-tab "Default")
-  (tabspaces-remove-to-default t)
-  (tabspaces-include-buffers '("*scratch*"))
-  (tabspaces-initialize-project-with-todo nil)
-  ;; sessions
-  (tabspaces-session t)
-  (tabspaces-session-auto-restore t)
-  ;; additional options
-  (tabspaces-fully-resolve-paths t)
-  (tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*"))
-  (tab-bar-new-tab-choice "*scratch*")
+  (persp-mode-prefix-key (kbd "C-c x"))
+  (persp-state-default-file (locate-user-emacs-file "persp-state.el"))
+  (persp-sort 'created)
+  (persp-show-modestring t)
+  (persp-switch-wrap t)
+  :init
+  (persp-mode)
   :config
-  ;; Filter consult-buffer to show workspace-local buffers by default
+  ;; Auto-save perspective state on exit (manual restore only)
+  (add-hook 'kill-emacs-hook #'persp-state-save)
+
+  ;; Make previous-buffer/next-buffer perspective-aware
+  (setq switch-to-prev-buffer-skip
+        (lambda (win buff bury-or-kill)
+          (not (persp-is-current-buffer buff))))
+
+  ;; Better window management
+  (customize-set-variable 'display-buffer-base-action
+    '((display-buffer-reuse-window display-buffer-same-window)
+      (reusable-frames . t)))
+  (customize-set-variable 'even-window-sizes nil)
+
+  ;; Add perspective buffer source to consult-buffer
   (with-eval-after-load 'consult
-    ;; Hide the full buffer list (still available with "b" prefix)
-    (plist-put consult-source-buffer :hidden t)
-    (plist-put consult-source-buffer :default nil)
-    ;; Define workspace-local buffer source
-    (defvar consult--source-workspace
-      (list :name     "Workspace Buffers"
-            :narrow   ?w
+    (defvar consult--source-perspective
+      (list :name     "Perspective Buffers"
+            :narrow   ?p
             :history  'buffer-name-history
             :category 'buffer
             :state    #'consult--buffer-state
             :default  t
             :items    (lambda () (consult--buffer-query
-                             :predicate #'tabspaces--local-buffer-p
+                             :predicate #'persp-is-current-buffer
                              :sort 'visibility
                              :as #'buffer-name)))
-      "Set workspace buffer list for consult-buffer.")
-    (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+      "Set perspective buffer list for consult-buffer.")
+    (add-to-list 'consult-buffer-sources 'consult--source-perspective)))
 
 ;;; version control
 

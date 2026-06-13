@@ -1,4 +1,4 @@
-;;; ghostel-agent-tab.el --- Tab layout for AI agent ghostel buffers -*- lexical-binding: t; -*-
+;;; ghostel-agent-tab.el --- Perspective layout for AI agent ghostel buffers -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
 (require 'project)
@@ -94,21 +94,20 @@ instead of creating a new one."
   (interactive)
   (ghostel-agent-project--run "cursor" ghostel-agent-cursor-command))
 
-;;; Tab command
+;;; Perspective command
 
 ;;;###autoload
 (defun ghostel-agent-tab ()
-  "Create or switch to a tab showing AI agent ghostel buffers side-by-side.
+  "Create or switch to a perspective showing AI agent ghostel buffers side-by-side.
 If no agent buffers exist, display a message.  If the \"AI Agents\"
-tab already exists, switch to it and refresh the layout."
+perspective already exists, switch to it and refresh the layout."
   (interactive)
   (let ((bufs (ghostel-agent-tab--buffers)))
     (if (null bufs)
         (message "No AI agent buffers")
-      (if (ghostel-terminal-tab--tab-named-p "AI Agents")
-          (tab-bar-switch-to-tab "AI Agents")
-        (tab-bar-new-tab)
-        (tab-bar-rename-tab "AI Agents"))
+      (persp-switch "AI Agents")
+      (dolist (buf bufs)
+        (persp-add-buffer buf))
       (ghostel-terminal-tab--layout bufs))))
 
 (provide 'ghostel-agent-tab)
