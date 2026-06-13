@@ -6,7 +6,6 @@
   (horizontal-scroll-bar-mode -1))
 (tool-bar-mode -1)
 (tooltip-mode -1)
-(add-to-list 'default-frame-alist '(undecorated . t))
 
 ;;; Set paths for both emacs and external emacs processes
 (add-to-list 'exec-path "~/.dotnet/tools/")
