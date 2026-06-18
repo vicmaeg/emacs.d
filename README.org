@@ -1,0 +1,117 @@
+#+title: Vicmaeg's Emacs Configuration
+#+author: vicmaeg
+
+This is my personal Emacs configuration, designed to run as a daemon via
+~systemd~ and used through ~emacsclient~.
+
+* Design goals
+
+- Daemon-first: Emacs runs in the background, frames are opened with
+  ~emacsclient~.
+- Modal-free editing: heavy use of ~avy~, ~consult~, and custom key bindings
+  instead of modal editing.
+- Minimal GUI chrome: no menu bar, tool bar, scroll bars, or tooltips.
+- Package management through ~use-package~ and MELPA.
+
+* Starting the daemon
+
+#+begin_src sh
+  systemctl --user enable --now emacs
+  systemctl --user status emacs
+#+end_src
+
+* Opening Emacs
+
+In a terminal:
+
+#+begin_src sh
+  emacsclient -t
+#+end_src
+
+As a detached GUI frame:
+
+#+begin_src sh
+  nohup emacsclient -c -n < /dev/null > /dev/null 2>&1 &
+#+end_src
+
+* Installing or updating packages
+
+Because the daemon has no package archives and ~use-package-always-ensure~ is
+disabled in daemon mode, new packages must be installed by running Emacs
+directly:
+
+#+begin_src sh
+  emacs -nw
+#+end_src
+
+After installing, restart the daemon:
+
+#+begin_src sh
+  systemctl --user restart emacs
+#+end_src
+
+* Proposed shell aliases
+
+Add these to your =~/.bashrc= or =~/.zshrc=:
+
+#+begin_src sh
+  # Terminal frame
+  alias e='emacsclient -t'
+
+  # Detached GUI frame (survives terminal close)
+  alias egui='nohup emacsclient -c -n < /dev/null > /dev/null 2>&1 &'
+
+  # Daemon control
+  alias emacsd='systemctl --user status emacs'
+  alias emacsd-restart='systemctl --user restart emacs'
+  alias emacsd-stop='systemctl --user stop emacs'
+
+  # Run Emacs directly to install/update packages
+  alias emacs-install='emacs -nw'
+#+end_src
+
+* Notable packages
+
+** Completion framework
+- ~vertico~ :: vertical completion UI
+- ~marginalia~ :: rich annotations in the minibuffer
+- ~orderless~ :: flexible completion matching
+- ~consult~ :: search and navigation commands
+- ~embark~ :: context-aware actions
+- ~company~ :: in-buffer completion
+
+** Appearance
+- ~gruber-darker-theme~ :: default theme
+- ~modus-themes~, ~ef-themes~, ~doric-themes~ :: additional theme options
+- ~fontaine~ :: font preset management
+- ~nerd-icons~ family :: icons for dired, completion, and buffers
+
+** Navigation and editing
+- ~avy~ :: jump to visible text
+- ~expand-region~ :: incrementally expand selections
+- ~multiple-cursors~ :: edit multiple locations at once
+- ~move-text~ :: move lines and regions up/down
+- ~yasnippet~ :: snippets
+
+** Project and version control
+- ~project~ :: built-in project management
+- ~perspective~ :: workspace-like perspectives
+- ~magit~ :: Git interface
+- ~diff-hl~ :: version control indicators in the fringe/margin
+
+** Notes and organization
+- ~denote~ :: simple, note-taking system
+- ~denote-journal~ :: daily journal notes
+- ~org-mode~ :: built-in organization and agenda
+
+** Development
+- ~lsp-mode~ :: Language Server Protocol support
+- ~treesit-auto~ :: automatic tree-sitter mode remapping
+
+** Terminal and shell
+- ~ghostel~ :: terminal emulator integration
+- ~eshell~ :: built-in Emacs shell
+
+** File management
+- ~dired-subtree~ :: subtree navigation in Dired
+- ~trashed~ :: trash can management
