@@ -5,15 +5,19 @@
 ;;; Set up the package manager
 
 (require 'package)
+
+;; In daemon mode, disable package archives to prevent any network access.
+;; In normal mode, include MELPA so packages can be installed/updated.
+;; Packages must already be installed before starting the daemon.
+(if (daemonp)
+    (setq package-archives nil)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/")))
+
 (package-initialize)
 
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-
-(when (< emacs-major-version 29)
-  (unless (package-installed-p 'use-package)
-    (unless package-archive-contents
-      (package-refresh-contents))
-    (package-install 'use-package)))
+;; Do not auto-install packages when Emacs starts as a daemon.
+;; To install or update packages, run Emacs directly (not as daemon).
+(setq use-package-always-ensure (not (daemonp)))
 
 (add-to-list 'display-buffer-alist
              '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
@@ -243,12 +247,6 @@ The DWIM behaviour of this command is as follows:
   :after marginalia
   :config
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
-
-(use-package nerd-icons-company
-  :ensure t
-  :after company
-  :config
-  (add-to-list 'company-format-margin-function #'nerd-icons-company-margin))
 
 (use-package nerd-icons-dired
   :ensure t
