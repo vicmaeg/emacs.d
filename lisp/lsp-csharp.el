@@ -37,7 +37,6 @@ trigger a workspace-root prompt or a new LSP session."
 
 (add-hook 'csharp-ts-mode-hook #'lsp-deferred)
 (add-hook 'csharp-ts-mode-hook #'flymake-mode)
-(add-hook 'csharp-ts-mode-hook #'electric-pair-local-mode)
 
 (setq lsp-roslyn-server-log-level "Warning")
 

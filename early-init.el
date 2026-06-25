@@ -27,3 +27,8 @@
 (setq-default bidi-display-reordering 'left-to-right
               bidi-paragraph-direction 'left-to-right)
 (setq bidi-inhibit-bpa t)
+
+;;; Garbage collector — moderate threshold to avoid long GC pauses
+;;; while keeping memory from growing unbounded
+(setq gc-cons-threshold (* 20 1024 1024)
+      gc-cons-percentage 0.1)

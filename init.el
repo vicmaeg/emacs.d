@@ -81,7 +81,7 @@ The DWIM behaviour of this command is as follows:
 (autoload 'zap-up-to-char "misc"
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 (global-set-key (kbd "M-/") #'hippie-expand)
-(global-set-key (kbd "C-x C-b") #'ibuffer)
+(global-set-key (kbd "M-/") #'hippie-expand)
 (global-set-key (kbd "M-z") #'zap-up-to-char)
 
 ;;; Configure backups and autosave folders
@@ -117,6 +117,7 @@ The DWIM behaviour of this command is as follows:
 (setq-default display-line-numbers-type t)
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 (add-hook 'text-mode-hook #'display-line-numbers-mode)
+(add-hook 'prog-mode-hook #'electric-pair-local-mode)
 (global-hl-line-mode 1)
 
 ;;; Tweak the looks of Emacs
@@ -392,6 +393,7 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
+  (setq dired-listing-switches "-alh")
   (setq delete-by-moving-to-trash t)
   (setq dired-dwim-target t)
   (setq dired-kill-when-opening-new-dired-buffer t))
@@ -476,6 +478,13 @@ The DWIM behaviour of this command is as follows:
 ;; Automatically chmod +x files that start with a shebang line on save
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 
+;; Remove trailing whitespace on save in prog-mode buffers.
+;; Uses `write-file-functions' (runs on explicit save, not auto-save)
+;; with a buffer-local hook so it never touches non-prog buffers.
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (add-hook 'write-file-functions #'delete-trailing-whitespace nil t)))
+
 ;; Use string syntax in re-builder instead of painful double-escaped read syntax
 (setq reb-re-syntax 'string)
 
@@ -517,7 +526,7 @@ The DWIM behaviour of this command is as follows:
   (setq avy-all-windows nil)
   (setq avy-single-candidate-action nil)
   :bind
-  (("C-;" . avy-goto-char-timer)
+  (("M-g c" . avy-goto-char-timer)
    ("M-g f" . avy-goto-line)
    ("M-g w" . avy-goto-word-1)))
 
@@ -534,14 +543,24 @@ The DWIM behaviour of this command is as follows:
 (use-package multiple-cursors
   :ensure t
   :bind
-  (("C-c m l" . mc/edit-lines)
-   ("C-c m n" . mc/mark-next-like-this)
-   ("C-c m p" . mc/mark-previous-like-this)
-   ("C-c m a" . mc/mark-all-like-this)
-   ("C-c m N" . mc/unmark-next-like-this)
-   ("C-c m P" . mc/unmark-previous-like-this)
-   ("C-c m s" . mc/skip-to-next-like-this)
-   ("C-c m S" . mc/skip-to-previous-like-this))
+  (;; GUI bindings (rexim/official style) — do not work in terminals
+   ("C-S-c C-S-c" . mc/edit-lines)
+   ("C->"         . mc/mark-next-like-this)
+   ("C-<"         . mc/mark-previous-like-this)
+   ("C-c C-<"     . mc/mark-all-like-this)
+   ("C-<tab>"     . mc/skip-to-next-like-this)
+   ("C-|"         . mc/skip-to-previous-like-this)
+   ("C-&"         . mc/unmark-next-like-this)
+   ("C-%"         . mc/unmark-previous-like-this)
+   ;; Terminal-safe fallback (C->, C-<, C-", C-: are unreachable in -t)
+   ("C-c m l"     . mc/edit-lines)
+   ("C-c m n"     . mc/mark-next-like-this)
+   ("C-c m p"     . mc/mark-previous-like-this)
+   ("C-c m a"     . mc/mark-all-like-this)
+   ("C-c m N"     . mc/unmark-next-like-this)
+   ("C-c m P"     . mc/unmark-previous-like-this)
+   ("C-c m s"     . mc/skip-to-next-like-this)
+   ("C-c m S"     . mc/skip-to-previous-like-this))
   :config
   (setq mc/always-run-for-all t))
 
@@ -625,7 +644,8 @@ The DWIM behaviour of this command is as follows:
 ;;; version control
 
 (use-package magit
-  :ensure t)
+  :ensure t
+  :commands (magit-status))
 
 (use-package git-link
   :ensure t
@@ -658,7 +678,6 @@ The DWIM behaviour of this command is as follows:
   (setq lsp-enable-file-watchers nil)
   (setq lsp-response-timeout 10)
   (setq lsp-use-plists t)
-  (setq gc-cons-threshold 100000000)
   (setq lsp-restart 'auto-restart)
   (setq lsp-clients-clangd-args
         '("--clang-tidy"
