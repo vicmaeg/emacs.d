@@ -128,13 +128,13 @@ The DWIM behaviour of this command is as follows:
 (use-package ef-themes
   :ensure t)
 
-(use-package doric-themes
+(use-package kanagawa-themes
   :ensure t)
 
-(use-package gruber-darker-theme
-  :ensure t)
+(use-package kusanagi-theme
+  :vc (:url "https://github.com/LionyxML/kusanagi-theme" :rev :newest))
 
-(load-theme 'gruber-darker :no-confirm-loading)
+(load-theme 'kanagawa-wave :no-confirm-loading)
 
 (use-package fontaine
   :ensure t
