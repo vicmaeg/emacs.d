@@ -603,7 +603,7 @@ The DWIM behaviour of this command is as follows:
   (("C-x C-b" . persp-list-buffers)
    ("C-x k" . persp-kill-buffer*))
   :custom
-  (persp-mode-prefix-key (kbd "C-c x"))
+  (persp-mode-prefix-key (kbd "C-c p"))
   (persp-state-default-file (locate-user-emacs-file "persp-state.el"))
   (persp-sort 'created)
   (persp-show-modestring t)
