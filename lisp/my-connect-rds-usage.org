@@ -1,0 +1,471 @@
+#+TITLE: my-connect-rds usage guide
+#+PROPERTY: header-args:sql :eval never
+
+This is the usage guide for connecting Emacs to RDS PostgreSQL databases
+using credentials fetched from an external script.  There are two
+commands:
+
+- =my/connect-rds= :: opens a =psql= SQLi buffer (=sql-interactive-mode=).
+  Best for running SQL, sending statements from =.sql= files, and
+  automation.
+- =my/connect-rds-pgmacs= :: opens the database in PGmacs, a widget-based
+  table browser/editor.  Best for browsing tables, inspecting rows, and
+  reading JSONB values.
+
+Both commands use the same script, the same customizable environments and
+databases, and the same credential format.  See the source files
+=my-connect-rds.el= and =my-connect-rds-pgmacs.el= for implementation
+details, or =M-x describe-function RET my/connect-rds RET= for reference.
+
+* to improve
+check this macro https://johncoder.com/using-emacs-with-postgresql/
+
+
+* Quick start
+
+** psql path
+
+1. =M-x my/connect-rds=
+2. Pick an environment (e.g. =local=) and a database (e.g. =kyc=).
+3. A buffer named =*SQL: local kyc*= opens, running =sql-interactive-mode=
+   (a =comint=-based =psql= session).  It is ready to receive SQL.
+
+Type a query and press =RET=:
+
+#+begin_src sql
+SELECT current_user, current_database();
+#+end_src
+
+** PGmacs path
+
+1. =M-x my/connect-rds-pgmacs=
+2. Pick an environment and database (same prompts as =my/connect-rds=).
+3. A buffer named =*PostgreSQL <dbname>*= opens, listing all tables in
+   the database.  Type =o= on a table to open it, =RET= on a cell to
+   edit, =j= to copy a row as JSON.
+
+See [[*PGmacs mode][PGmacs mode]] below for the full keybinding reference.
+
+* Connecting
+
+=M-x my/connect-rds= prompts for:
+
+- *Environment* :: one of =my/connect-rds-environments= (default:
+  =local=, =dev=, =test=, =acc=, =box=, =prod=).  Free input is
+  accepted, so you can type other values without customizing the list.
+  =local= targets the Docker Compose stack in the repository root and
+  the sample =~/.local/bin/connect-rds.sh= for offline testing.
+- *Database* :: one of =my/connect-rds-databases= (default: =kyc=,
+  =vpm=, =identitystore=, =configuration=).  Free input is also
+  accepted.
+
+The command then runs =my/connect-rds-script= as
+=SCRIPT ENVIRONMENT DATABASE=, parses the =Host=/User=/Password=/Port=
+lines it prints to stdout, and starts =psql= in a buffer named
+=*SQL: ENVIRONMENT DATABASE*=.
+
+** Reconnecting
+
+- If a buffer with that name already exists and its =psql= process is
+  /alive/, =my/connect-rds= switches to it instead of starting a new
+  one.  This avoids opening duplicate sessions for the same env/db.
+- If the buffer exists but the process is /dead/ (e.g. =psql= quit or
+  the network dropped), the dead buffer is killed and a fresh
+  connection is made.  This prevents the =-1=, =-2= suffix accumulation
+  that =sql.el= otherwise uses to guarantee unique buffer names.
+
+* Running SQL directly in the =*SQL*= buffer
+
+The =*SQL: ...*= buffer runs =sql-interactive-mode=, which is built on
+=comint=.  You can type SQL and press =RET= to send a line, or use the
+mode's keybindings:
+
+| Key       | Command                  | Action                                            |
+|-----------+--------------------------+---------------------------------------------------|
+| =C-j=       | =sql-accumulate-and-indent= | Accumulate the current line without sending (for multi-line statements) |
+| =RET=       | (comint default)         | Send the accumulated input                        |
+| =C-c C-w=   | =sql-copy-column=          | Copy the column under point                       |
+| =o= / =O=    | =sql-magic-go=             | Send =\g= (go)                                    |
+| =;=         | =sql-magic-semicolon=      | Insert =;= and send                               |
+| =C-c C-l a= | =sql-list-all=             | List all objects (= \d+ )                         |
+| =C-c C-l t= | =sql-list-table=           | List a table's details (= \d+ <table> )           |
+| =M-p= / =M-n= | (comint default)         | Previous / next input in history                  |
+
+To leave the session, type =\q= and press =RET=, or simply kill the
+buffer (=C-x k=).
+
+* Running SQL from a =.sql= file
+
+This is the workflow described in the Emacs Redux article: keep your
+SQL in a =.sql= file (which opens in =sql-mode=) and send pieces of it
+to a live SQLi buffer.  This is useful for saved queries, versioned
+scripts, and re-running statements.
+
+** Step 1: open a SQLi buffer
+
+Run =M-x my/connect-rds= as described above.  You now have, say,
+=*SQL: dev kyc*=.
+
+** Step 2: open or create a =.sql= file
+
+#+begin_src fundamental
+C-x C-f ~/queries/kyc-dev.sql
+#+end_src
+
+If the file extension is =.sql=, Emacs opens it in =sql-mode=.  If the
+product is not already set, run =M-x sql-set-product= and choose
+=postgres=.
+
+** Step 3: associate the file with the SQLi buffer
+
+#+begin_src fundamental
+M-x sql-set-sqli-buffer
+#+end_src
+
+and pick =*SQL: dev kyc*=.  This sets the buffer-local variable
+=sql-buffer=, which tells =sql-mode= where to send SQL.  (There is no
+default keybinding for =sql-set-sqli-buffer=.)
+
+** Step 4: send SQL
+
+From the =.sql= buffer (=sql-mode-map=):
+
+| Key       | Command                  | Sends                       |
+|-----------+--------------------------+-----------------------------|
+| =C-c C-c=   | =sql-send-paragraph=       | The current paragraph       |
+| =C-c C-r=   | =sql-send-region=          | The active region           |
+| =C-c C-b=   | =sql-send-buffer=          | The whole buffer            |
+| =C-c C-s=   | =sql-send-string=          | A string you type           |
+| =C-c C-n=   | =sql-send-line-and-next=   | The current line, then move down |
+| =C-c C-z=   | =sql-show-sqli-buffer=     | Show the SQLi buffer        |
+| =C-c C-l a= | =sql-list-all=             | List all objects            |
+| =C-c C-l t= | =sql-list-table=           | List a table's details      |
+
+For example, select a query with the region and press =C-c C-r=; the
+SQL is sent to =*SQL: dev kyc*= and the result appears there.
+
+** Jumping to the SQLi buffer after sending
+
+By default Emacs keeps focus in the =.sql= buffer after sending.  To
+pop to the SQLi buffer automatically:
+
+#+begin_src elisp
+(setq sql-pop-to-buffer-after-send-region t)
+#+end_src
+
+Toggle it interactively from the SQL menu or with:
+
+#+begin_src fundamental
+M-x sql-toggle-pop-to-buffer-after-send-region
+#+end_src
+
+** One file per env/db convention
+
+A practical layout is one directory per environment, with =.sql= files
+named after the database:
+
+#+begin_example
+~/queries/
+  dev/
+    kyc.sql
+    vpm.sql
+  prod/
+    kyc.sql
+#+end_example
+
+To avoid running =sql-set-product= in every file, add a
+=.dir-locals.el= at the project root:
+
+#+begin_src elisp
+;; .dir-locals.el
+((sql-mode
+  (sql-product . postgres)))
+#+end_src
+
+* Multiple simultaneous connections
+
+You can connect to several databases at once: each =M-x my/connect-rds=
+call opens its own =*SQL: ENV DB*= buffer, e.g. =*SQL: dev kyc*= and
+=*SQL: dev vpm*=.  To direct a =.sql= file's output to a particular
+one, use =M-x sql-set-sqli-buffer= and choose the target buffer.
+
+- =M-x sql-show-sqli-buffer= (=C-c C-z=) :: reveal the SQLi buffer the
+  current =.sql= file is associated with.
+- =M-x sql-set-sqli-buffer= :: reassign the current =.sql= file to a
+  different live SQLi buffer.
+
+Because =sql-buffer= is buffer-local, each =.sql= file remembers its
+own target, so you can keep several files open and send from each to
+the right database.
+
+* Saving results
+
+- =C-c C-w= (=sql-copy-column=) in the SQLi buffer copies the column
+  under point, useful for pulling a single value out of a result set.
+- To save a whole result set: select the output in the SQLi buffer
+  (e.g. with =C-SPC= and movement, or =C-x h= for the whole buffer),
+  then =M-x write-region= (or =C-x C-w= on a copy) to write it to a
+  file.
+- For CSV-like output, run =psql= meta-commands in the SQLi buffer
+  before your query, e.g. =\a= (unaligned) and =\F ,= (field
+  separator), then capture the output region as above.
+
+* Pretty-printing JSONB in psql
+
+The =my/connect-rds= command sets these =psql= options automatically
+for every RDS session (via =sql-postgres-options=):
+
+- =pager=off= :: the pager (=less=) is unusable inside a comint buffer.
+- =expanded=on= :: one column per line, so long JSONB values get room
+  to breathe instead of being truncated or wrapping chaotically.
+- =border=2= and =linestyle=unicode= :: cleaner table grid.
+
+These help with raw JSONB, but psql has /no setting that auto-indents
+JSONB columns/.  To get indented, multi-line JSON, wrap the column
+with =jsonb_pretty()=:
+
+#+begin_src sql
+SELECT id, created_at, jsonb_pretty(payload) AS payload
+FROM logs
+WHERE id = 123;
+#+end_src
+
+The output is a multi-line, indented JSON block.  Caveat:
+=jsonb_pretty= returns =text= (not =jsonb=), and it normalizes key
+order (alphabetical) because it round-trips through =jsonb=.  Keep the
+raw column in your =SELECT= if you need to chain JSON operators.
+
+** One-shot expanded mode
+
+To get expanded mode for a single query without changing session
+settings, append =\gx=:
+
+#+begin_src sql
+SELECT id, jsonb_pretty(payload) AS payload FROM logs WHERE id = 123 \gx
+#+end_src
+
+** A VIEW for frequent queries
+
+If you read the same JSONB log table often, create a view so the JSON
+is always pretty-printed:
+
+#+begin_src sql
+CREATE VIEW logs_pretty AS
+SELECT id, created_at, jsonb_pretty(payload) AS payload
+FROM logs;
+#+end_src
+
+Then =SELECT * FROM logs_pretty WHERE id = 123;= shows indented JSON
+without wrapping every query.  Trade-off: =payload= is now =text=, so
+JSON operators (=->=, =->>=) won't work through the view; use the
+base table for querying and the view for reading.
+
+** Piping a single JSON column to =jq=
+
+For a single JSON column, you can pipe the output to an external
+pretty-printer:
+
+#+begin_src sql
+\pset format unaligned
+\pset tuples_only on
+SELECT payload::text FROM logs WHERE id = 123 \g | jq .
+#+end_src
+
+This works in =sql-interactive-mode= because the pager is bypassed.
+Select only the JSON column (no headers) for clean =jq= input.
+
+* PGmacs mode
+
+=M-x my/connect-rds-pgmacs= opens the database in [[https://github.com/emarsden/pgmacs/][PGmacs]], a widget-based
+table browser that connects via the pure-Emacs =pg-el= TCP client (no
+=psql= subprocess).  It is better suited to browsing tables and
+inspecting rows, especially when JSONB values are involved: PGmacs
+renders =jsonb= columns with a dedicated formatter (40-char column
+width) and can copy a whole row as JSON with =j=.
+
+** Caveats
+
+- PGmacs uses GnuTLS for encrypted connections, whereas =psql= uses
+  OpenSSL.  Some hosted services (including, potentially, RDS) may
+  have TLS incompatibilities.  Test with =local= first, then =dev= or
+  =test=, before relying on it for =prod=.
+- PGmacs is in beta status (per its README), though the author uses it
+  on production databases.
+- The psql path (=my/connect-rds=) does /not/ require PGmacs to be
+  installed.
+
+** Table-list buffer (main buffer)
+
+The main buffer lists all tables in the database.
+
+| Key  | Action                                      |
+|------+---------------------------------------------|
+| =RET=  | Open the table at point (row-list buffer)   |
+| =o=    | Prompt for a table name and open it         |
+| =e=    | Run an SQL query (typed in minibuffer)      |
+| =E=    | Run the SQL in the current buffer           |
+| =g=    | Redraw the table list                       |
+| =p=    | Display procedures and functions            |
+| =T=    | Switch back to the table-list buffer        |
+| =q=    | Bury the buffer                             |
+| =h= / =?= | Show help                                |
+
+** Row-list buffer (table contents)
+
+Displays the rows of a table, paginated for large tables.
+
+| Key    | Action                                                  |
+|--------+---------------------------------------------------------|
+| =RET=    | Edit the cell at point (in minibuffer)                |
+| =w=      | Edit the cell at point (widget buffer)                |
+| =DEL=    | Delete the row at point                               |
+| =+=      | Insert a new row (minibuffer prompts)                 |
+| =i=      | Insert a new row (widget buffer)                      |
+| =j=      | Copy the current row as JSON to the kill ring         |
+| =k= / =y= | Copy / paste a row                                    |
+| =e=      | Run an SQL query                                       |
+| =E=      | Run the SQL in the current buffer                      |
+| =o=      | Open another table                                     |
+| =g=      | Redraw (refetch from database)                         |
+| =W=      | Add a WHERE filter                                     |
+| =T=      | Switch back to the table-list buffer                   |
+| =q=      | Bury the buffer                                        |
+| =n= / =p= | Next / previous page (in paginated buffers)           |
+| =0=-=9=  | Jump to column N                                        |
+| =h= / =?= | Show help                                             |
+
+** Exporting from PGmacs
+
+Buttons at the top of a row-list buffer provide:
+- =Export table to CSV buffer=
+- =Export table to MD buffer=
+
+The =j= key copies a single row as JSON to the kill ring, which you
+can then yank into any buffer with =C-y=.
+
+* Configuration
+
+All settings live in the =my-connect-rds= customize group and are shared
+by both =my/connect-rds= and =my/connect-rds-pgmacs=:
+
+#+begin_src elisp
+(setq my/connect-rds-script "~/.local/bin/connect-rds.sh")
+(setq my/connect-rds-environments '("local" "dev" "test" "acc" "box" "prod"))
+(setq my/connect-rds-databases
+      '("kyc" "vpm" "identitystore" "configuration"))
+(setq my/connect-rds-port 5432) ; fallback when the script omits Port=
+#+end_src
+
+Or use the customization UI:
+
+#+begin_src fundamental
+M-x customize-group RET my-connect-rds RET
+#+end_src
+
+The psql pretty-print options (=pager=off=, =expanded=on=, =border=2=,
+=linestyle=unicode=) are applied automatically by =my/connect-rds= via
+=sql-postgres-options= and are scoped to RDS sessions only (they do not
+affect =M-x sql-postgres= run outside =my/connect-rds=).  To customize
+them, edit the =sql-postgres-options= binding in
+=my-connect-rds.el=.
+
+PGmacs is installed via =package-vc-install= (see =init.el=).  Upgrade
+with =M-x package-vc-upgrade RET pgmacs RET=.
+
+* Local testing
+
+A Docker Compose stack at the repository root
+(=~/.emacs.d/docker-compose.yml=) spins up two PostgreSQL containers
+with distinct credentials, and a sample script at
+=~/.local/bin/connect-rds.sh= maps =local kyc= / =local vpm= to them.
+This lets you exercise both =my/connect-rds= and =my/connect-rds-pgmacs=
+end-to-end without AWS.
+
+1. Start the stack:
+
+   #+begin_src sh
+   docker compose -f ~/.emacs.d/docker-compose.yml up -d
+   #+end_src
+
+   Two =postgres:16= containers come up:
+
+   | Service | Host       | Port | User       | Password   | Database |
+   |---------+------------+------+------------+------------+----------|
+   | kyc-db  | 127.0.0.1  | 5433 | =kyc_user=  | =kyc_pass=  | =kyc=     |
+   | vpm-db  | 127.0.0.1  | 5434 | =vpm_user=  | =vpm_pass=  | =vpm=     |
+
+2. Connect with either command and choose =local= for the environment,
+   then =kyc= or =vpm= for the database:
+
+   - =M-x my/connect-rds= (psql SQLi buffer)
+   - =M-x my/connect-rds-pgmacs= (PGmacs table browser)
+
+3. Run a smoke test.  In the psql path:
+
+   #+begin_src sql
+   SELECT current_user, current_database();
+   #+end_src
+
+   Expect =kyc_user= / =kyc= for the =kyc= container, and =vpm_user= /
+   =vpm= for the =vpm= container.
+
+   In the PGmacs path, the table-list buffer should appear; type =e= to
+   run the same =SELECT= and see the result in a table.
+
+On your work PC, replace =~/.local/bin/connect-rds.sh= with the real
+RDS script (same output format); =local= can stay in the environments
+list or be removed via =M-x customize-group RET my-connect-rds RET=.
+
+Teardown:
+
+#+begin_src sh
+docker compose -f ~/.emacs.d/docker-compose.yml down -v
+#+end_src
+
+* Security notes
+
+- The password is passed to =psql= via the =PGPASSWORD= environment
+  variable of the spawned process only.  It is bound locally around the
+  =sql-product-interactive= call and is /not/ stored in
+  =sql-connection-alist=, =custom.el=, or any Emacs variable after the
+  call returns.
+- =sql-connection-alist= is deliberately not used, because that would
+  persist credentials in plaintext.
+- Do not commit =connect-rds-test.sh= (it contains test passwords) or
+  any real credentials to your Emacs configuration.
+
+* Troubleshooting
+
+- *"connect-rds: script not executable: ..."* :: =my/connect-rds-script=
+  does not point to an executable file.  Check the path and =chmod +x=.
+- *"connect-rds: script failed (exit N): ..."* :: the script returned a
+  non-zero exit code; the stderr is included.  Common causes: AWS
+  credentials not configured, no permission for that env/db, or network
+  issues.
+- *"connect-rds: Host/User/Password missing from script output"* :: the
+  script ran but did not emit one of the required lines.  Run it
+  manually in a shell to inspect its output.
+- *"Unable to locate SQL program `psql'"* :: =sql.el= could not find
+  =psql= on =exec-path=.  Install the PostgreSQL client or adjust
+  =exec-path= / =sql-postgres-program=.
+- *Buffer name keeps gaining =-1=, =-2= suffixes* :: a dead =*SQL:
+  ENV DB*= buffer is lingering.  =my/connect-rds= should kill these
+  automatically; if it does not, kill them manually with =C-x k=.
+- *Sent SQL goes to the wrong database* :: the =.sql= file's
+  =sql-buffer= points at a different SQLi buffer.  Run =M-x
+  sql-set-sqli-buffer= and pick the correct one (type part of the name
+  to filter, do not press RET immediately or you get the pre-filled
+  default).  Also ensure =sql-product= is =postgres= in the =.sql=
+  buffer (=M-x sql-set-product RET postgres RET=); otherwise
+  =sql-find-sqli-buffer= returns nil and =sql-set-sqli-buffer= starts a
+  new session instead of prompting.
+- *"Cannot open load file: No such file or directory, pgmacs"* (pgmacs
+  path) :: PGmacs is not installed.  Run =M-x package-vc-install RET
+  https://github.com/emarsden/pgmacs/ RET= (and the =pg-el= dependency:
+  =M-x package-vc-install RET https://github.com/emarsden/pg-el/ RET=),
+  or restart Emacs so the =use-package= declarations in =init.el= run.
+- *PGmacs TLS error on RDS* :: PGmacs uses GnuTLS, which may be
+  incompatible with some hosted PostgreSQL services that expect
+  OpenSSL.  If =my/connect-rds-pgmacs= fails to connect to RDS but
+  =my/connect-rds= (psql) works, this is the likely cause.  Use the
+  psql path for that environment.

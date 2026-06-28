@@ -1,0 +1,46 @@
+# Docker Compose stack for local testing of my-connect-rds.
+#
+# NOT meant to be committed — contains test credentials.  Add to
+# .gitignore or keep untracked.  Start with:
+#
+#     docker compose -f ~/.emacs.d/docker-compose.yml up -d
+#
+# Two PostgreSQL services on distinct host ports so `local kyc' and
+# `local vpm' hit different databases with different users/passwords:
+#
+#     kyc-db -> 127.0.0.1:5433  (kyc_user  / kyc_pass  / kyc)
+#     vpm-db -> 127.0.0.1:5434  (vpm_user  / vpm_pass  / vpm)
+#
+# Teardown:
+#     docker compose -f ~/.emacs.d/docker-compose.yml down -v
+
+services:
+  kyc-db:
+    image: postgres:16
+    container_name: my-connect-rds-kyc
+    environment:
+      POSTGRES_USER: kyc_user
+      POSTGRES_PASSWORD: kyc_pass
+      POSTGRES_DB: kyc
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kyc_user -d kyc"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  vpm-db:
+    image: postgres:16
+    container_name: my-connect-rds-vpm
+    environment:
+      POSTGRES_USER: vpm_user
+      POSTGRES_PASSWORD: vpm_pass
+      POSTGRES_DB: vpm
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vpm_user -d vpm"]
+      interval: 2s
+      timeout: 3s
+      retries: 10

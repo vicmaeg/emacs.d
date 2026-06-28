@@ -688,6 +688,18 @@ The DWIM behaviour of this command is as follows:
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))
 (require 'lsp-csharp)
 (require 'lsp-c)
+(require 'my-connect-rds)
+(require 'my-connect-rds-pgmacs)
+
+;; PGmacs: a widget-based PostgreSQL table browser/editor.
+;; Used by `my/connect-rds-pgmacs'.  Installed from source via VC.
+;; The psql path (`my/connect-rds') does not depend on these packages.
+(use-package pg
+  :vc (:url "https://github.com/emarsden/pg-el/"))
+(use-package pgmacs
+  :vc (:url "https://github.com/emarsden/pgmacs/")
+  :after pg
+  :commands (pgmacs pgmacs-open-string pgmacs-open-uri))
 
 (use-package which-key
   :ensure nil
