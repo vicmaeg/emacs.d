@@ -1,8 +1,14 @@
-;;; ghostel-terminal-tab.el --- Perspective layout for ghostel terminal buffers -*- lexical-binding: t; -*-
+;;; my-persp-terminals.el --- Perspective layout for ghostel terminal buffers -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
+(require 'perspective)
 
-(defun ghostel-terminal-tab--get-buffers ()
+(declare-function persp-switch "perspective")
+(declare-function persp-add-buffer "perspective")
+
+(defvar my/persp-map)
+
+(defun my/persp-terminals--get-buffers ()
   "Return a list of live ghostel buffers."
   (cl-remove-if-not
    (lambda (b)
@@ -10,14 +16,14 @@
        (derived-mode-p 'ghostel-mode)))
    (buffer-list)))
 
-(defun ghostel-terminal-tab--get-terminal-buffers ()
+(defun my/persp-terminals--get-terminal-buffers ()
   "Return a list of live ghostel buffers, excluding AI agent buffers."
   (cl-remove-if-not
    (lambda (b)
      (not (string-match-p "\\`\\*AI Agent" (buffer-name b))))
-   (ghostel-terminal-tab--get-buffers)))
+   (my/persp-terminals--get-buffers)))
 
-(defun ghostel-terminal-tab--layout (buffers)
+(defun my/persp-terminals--layout (buffers)
   "Arrange BUFFERS side-by-side in the current perspective."
   (delete-other-windows)
   (switch-to-buffer (car buffers))
@@ -26,19 +32,22 @@
   (balance-windows))
 
 ;;;###autoload
-(defun ghostel-terminal-tab ()
+(defun my/persp-terminals ()
   "Create or switch to a perspective showing all ghostel buffers side-by-side.
 If no ghostel buffers exist, display a message.  If the \"Terminals\"
 perspective already exists, switch to it and refresh the layout."
   (interactive)
   (require 'ghostel)
-  (let ((bufs (ghostel-terminal-tab--get-terminal-buffers)))
+  (let ((bufs (my/persp-terminals--get-terminal-buffers)))
     (if (null bufs)
         (message "No ghostel buffers")
       (persp-switch "Terminals")
       (dolist (buf bufs)
         (persp-add-buffer buf))
-      (ghostel-terminal-tab--layout bufs))))
+      (my/persp-terminals--layout bufs))))
 
-(provide 'ghostel-terminal-tab)
-;;; ghostel-terminal-tab.el ends here
+(with-eval-after-load 'my-perspectives
+  (define-key my/persp-map (kbd "t") #'my/persp-terminals))
+
+(provide 'my-persp-terminals)
+;;; my-persp-terminals.el ends here

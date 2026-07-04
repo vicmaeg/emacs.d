@@ -772,10 +772,9 @@ The DWIM behaviour of this command is as follows:
 (add-to-list 'eshell-visual-commands "opencode")
 (add-to-list 'eshell-visual-commands "cursor")
 
-(require 'ghostel-terminal-tab)
-(require 'ghostel-agent-tab)
-(global-set-key (kbd "C-c T") #'ghostel-terminal-tab)
-(global-set-key (kbd "C-c a") #'ghostel-agent-tab)
+(require 'my-persp-terminals)
+(require 'my-persp-agents)
+(require 'ghostel-agent-project)
 
 (defun my/project-magit-status ()
   "Run `magit-status' in the root of the current project."
