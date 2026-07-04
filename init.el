@@ -688,6 +688,8 @@ The DWIM behaviour of this command is as follows:
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))
 (require 'lsp-csharp)
 (require 'lsp-c)
+(require 'my-perspectives)
+(global-set-key (kbd "C-c o") my/persp-map)
 
 (use-package which-key
   :ensure nil
