@@ -494,7 +494,10 @@ The DWIM behaviour of this command is as follows:
 
 ;;; org mode configuration
 
-(setq org-agenda-files '("~/org" "~/org/journal"))
+(setq org-directory (expand-file-name "~/org/"))
+(setq org-agenda-files (list org-directory
+                            (expand-file-name "journal" org-directory)))
+(setq org-default-notes-file (expand-file-name "todo.org" org-directory))
 
 ;;; Recent files
 
