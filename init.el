@@ -131,10 +131,7 @@ The DWIM behaviour of this command is as follows:
 (use-package kanagawa-themes
   :ensure t)
 
-(use-package kusanagi-theme
-  :vc (:url "https://github.com/LionyxML/kusanagi-theme" :rev :newest))
-
-(load-theme 'kanagawa-wave :no-confirm-loading)
+(load-theme 'modus-vivendi :no-confirm-loading)
 
 (use-package fontaine
   :ensure t
