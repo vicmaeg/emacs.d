@@ -455,7 +455,7 @@ The DWIM behaviour of this command is as follows:
   (setq denote-journal-interval 'daily)
   (defun my-denote-journal-insert-template ()
     (goto-char (point-max))
-    (insert "\n* Do today\n\n\n* Meeting notes\n\n\n* Learnings for the day\n"))
+    (insert "\n* Top 3 intentions\n\n\n* Daily wins\n\n\n* Lessons learned and thoughts\n"))
   (add-hook 'denote-journal-hook #'my-denote-journal-insert-template))
 
 (use-package denote-markdown
