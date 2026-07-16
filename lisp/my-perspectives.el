@@ -4,7 +4,7 @@
 (require 'project)
 
 (declare-function perspectives-hash "perspective")
-(declare-function denote-journal-new-or-existing-entry "denote-journal")
+(declare-function org-agenda-list "org-agenda")
 
 (defun my/persp--switch-or-create (name setup-fn)
   "Switch to perspective NAME; run SETUP-FN only when it is newly created."
@@ -14,16 +14,24 @@
       (funcall setup-fn))))
 
 (defun my/persp--notes-setup ()
-  "Build the notes layout: todo.org left, today's denote journal right."
+  "Build the notes layout: todo.org left, agenda week + inbox right.
+The inbox.org pane is only opened when it contains text."
   (delete-other-windows)
   (let ((left (find-file-noselect "~/org/todo.org")))
     (persp-add-buffer left)
     (set-window-buffer (selected-window) left))
   (let ((right (split-window-horizontally)))
     (with-selected-window right
-      (call-interactively #'denote-journal-new-or-existing-entry))
-    (when-let ((jb (window-buffer right)))
-      (persp-add-buffer jb)))
+      (let ((org-agenda-window-setup 'current-window))
+        (org-agenda-list nil nil 'week)))
+    (when-let ((ab (get-buffer "*Org Agenda*")))
+      (persp-add-buffer ab))
+    (let ((inbox (find-file-noselect "~/org/inbox.org")))
+      (when (> (buffer-size inbox) 0)
+        (with-selected-window right
+          (let ((bottom (split-window-vertically)))
+            (set-window-buffer bottom inbox)
+            (persp-add-buffer inbox))))))
   (balance-windows))
 
 ;;;###autoload

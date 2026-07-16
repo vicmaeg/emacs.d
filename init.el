@@ -492,9 +492,11 @@ The DWIM behaviour of this command is as follows:
 ;;; org mode configuration
 
 (setq org-directory (expand-file-name "~/org/"))
-(setq org-agenda-files (list org-directory
-                            (expand-file-name "journal" org-directory)))
-(setq org-default-notes-file (expand-file-name "todo.org" org-directory))
+(setq org-default-notes-file (expand-file-name "inbox.org" org-directory))
+(setq org-agenda-files (list (expand-file-name "todo.org" org-directory)))
+(setq org-refile-targets '((nil . (:maxlevel . 9))
+                           (org-agenda-files . (:maxlevel . 9))))
+(global-set-key (kbd "C-c a") 'org-agenda)
 
 ;;; Recent files
 
