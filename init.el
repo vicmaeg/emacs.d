@@ -619,12 +619,6 @@ The DWIM behaviour of this command is as follows:
         (lambda (win buff bury-or-kill)
           (not (persp-is-current-buffer buff))))
 
-  ;; Better window management
-  (customize-set-variable 'display-buffer-base-action
-    '((display-buffer-reuse-window display-buffer-same-window)
-      (reusable-frames . t)))
-  (customize-set-variable 'even-window-sizes nil)
-
   ;; Add perspective buffer source to consult-buffer
   (with-eval-after-load 'consult
     (defvar consult--source-perspective

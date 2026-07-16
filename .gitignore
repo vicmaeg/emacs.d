@@ -20,3 +20,5 @@ fontaine-latest-state.eld
 persp-state.el
 *-tabspaces-session.el
 tabsession.el
+bookmarks
+tramp
