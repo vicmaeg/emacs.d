@@ -14,8 +14,8 @@
     (unless existing
       (funcall setup-fn))))
 
-(defun my/persp--notes-setup ()
-  "Build the notes layout: todo.org left, agenda week + inbox right.
+(defun my/persp--org-setup ()
+  "Build the org layout: todo.org left, agenda week + inbox right.
 The inbox.org pane is only opened when it contains text."
   (delete-other-windows)
   (let ((left (find-file-noselect "~/org/todo.org")))
@@ -36,10 +36,10 @@ The inbox.org pane is only opened when it contains text."
   (balance-windows))
 
 ;;;###autoload
-(defun my/persp-notes ()
-  "Switch to the \"notes\" perspective, creating it on first use."
+(defun my/persp-org ()
+  "Switch to the \"org\" perspective, creating it on first use."
   (interactive)
-  (my/persp--switch-or-create "notes" #'my/persp--notes-setup))
+  (my/persp--switch-or-create "org" #'my/persp--org-setup))
 
 (defun my/persp--config-setup ()
   "Build the config layout: init.el in a single window."
@@ -78,7 +78,7 @@ calls just switch to it."
 
 (defvar my/persp-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "n") #'my/persp-notes)
+    (define-key map (kbd "o") #'my/persp-org)
     (define-key map (kbd "c") #'my/persp-config)
     (define-key map (kbd "p") #'my/persp-project)
     map)
