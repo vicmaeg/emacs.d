@@ -5,6 +5,7 @@
 
 (declare-function perspectives-hash "perspective")
 (declare-function org-agenda-list "org-agenda")
+(defvar org-agenda-window-setup)
 
 (defun my/persp--switch-or-create (name setup-fn)
   "Switch to perspective NAME; run SETUP-FN only when it is newly created."
