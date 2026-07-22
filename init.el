@@ -493,7 +493,10 @@ The DWIM behaviour of this command is as follows:
 
 (setq org-directory (expand-file-name "~/org/"))
 (setq org-default-notes-file (expand-file-name "inbox.org" org-directory))
-(setq org-agenda-files (list (expand-file-name "todo.org" org-directory)))
+(setq org-agenda-files (list (expand-file-name "todo.org" org-directory)
+                             (expand-file-name "inbox.org" org-directory)
+                             (expand-file-name "areas" org-directory)
+                             (expand-file-name "projects" org-directory)))
 (setq org-refile-targets '((nil . (:maxlevel . 9))
                            (org-agenda-files . (:maxlevel . 9))))
 (global-set-key (kbd "C-c a") 'org-agenda)
