@@ -81,7 +81,6 @@ The DWIM behaviour of this command is as follows:
 (autoload 'zap-up-to-char "misc"
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 (global-set-key (kbd "M-/") #'hippie-expand)
-(global-set-key (kbd "M-/") #'hippie-expand)
 (global-set-key (kbd "M-z") #'zap-up-to-char)
 
 ;;; Configure backups and autosave folders
@@ -271,13 +270,13 @@ The DWIM behaviour of this command is as follows:
   :ensure t
   :config
   (setq completion-styles '(orderless basic))
-  ;; Clear category defaults so Orderless can filter LSP candidates
-  ;; in-buffer (works with company-capf).
+  ;; Clear category defaults so Orderless can filter candidates
+  ;; in-buffer (Corfu uses completion-at-point-functions).
   (setq completion-category-defaults nil)
   (setq completion-category-overrides
-        '((file (styles . (partial-completion orderless)))
-          (buffer (styles . (orderless basic)))
-          (info-menu (styles . (orderless basic))))))
+        '((file (styles partial-completion))
+          (buffer (styles orderless basic))
+          (info-menu (styles orderless basic)))))
 
 (use-package savehist
   :ensure nil
@@ -285,7 +284,7 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq savehist-save-minibuffer-history t)
   (add-to-list 'savehist-additional-variables 'vertico-repeat-history)
-  (add-to-list 'savehist-additional-variables 'company-cache)
+  (add-to-list 'savehist-additional-variables 'corfu-history)
   ;; Persist kill ring across sessions so clipboard history survives restarts
   (add-to-list 'savehist-additional-variables 'kill-ring)
   ;; Strip text properties from kill-ring entries before saving to keep
@@ -335,25 +334,40 @@ The DWIM behaviour of this command is as follows:
   :hook
   (embark-collect-mode . consult-preview-minor-mode))
 
-(use-package company
+(use-package corfu
   :ensure t
-  :hook (after-init . global-company-mode)
-  :bind
-  (:map company-active-map
-        ("<tab>" . company-complete-common-or-cycle)
-        ("S-<tab>" . company-select-previous)
-        ("RET" . company-complete-selection)
-        ("M-q" . company-show-doc-buffer))
+  :hook ((after-init . global-corfu-mode)
+         (after-init . corfu-history-mode)
+         (after-init . corfu-popupinfo-mode))
   :config
+  ;; TAB indents first, completes if indentation is unchanged
   (setq tab-always-indent 'complete)
-  (setq company-minimum-prefix-length 1)
-  (setq company-idle-delay 0.2)
-  (setq company-selection-wrap-around t)
-  (setq company-tooltip-align-annotations t)
-  (setq company-tooltip-width-grow-only t)
-  (setq company-require-match nil)
-  (setq company-dabbrev-downcase nil)
-  (setq company-dabbrev-ignore-case nil))
+  (setq corfu-quit-at-boundary t)
+  (setq corfu-quit-no-match t)
+  ;; Emacs 30: disable Ispell word completion in text modes (per Corfu README)
+  (setq text-mode-ispell-word-completion nil))
+
+(use-package nerd-icons-corfu
+  :ensure t
+  :after corfu
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+
+(use-package cape
+  :ensure t
+  :init
+  ;; Global fallbacks (depth 20); buffer-local major-mode/LSP capfs run first.
+  (add-hook 'completion-at-point-functions #'cape-file 20)
+  ;; Require a 3-char prefix for dabbrev (replaces removed `cape-dabbrev-min-length').
+  (add-hook 'completion-at-point-functions (cape-capf-prefix-length #'cape-dabbrev 3) 20)
+  :config
+  (defun my/cape-emacs-lisp-setup ()
+    (add-hook 'completion-at-point-functions #'cape-elisp-symbol 90 t))
+  (add-hook 'emacs-lisp-mode-hook #'my/cape-emacs-lisp-setup)
+  (add-hook 'lisp-interaction-mode-hook #'my/cape-emacs-lisp-setup)
+  (defun my/cape-prog-setup ()
+    (add-hook 'completion-at-point-functions #'cape-keyword 90 t))
+  (add-hook 'prog-mode-hook #'my/cape-prog-setup))
 
 (use-package yasnippet
   :ensure t
@@ -663,7 +677,8 @@ The DWIM behaviour of this command is as follows:
   :config
   (setq lsp-log-io nil)
   (setq lsp-idle-delay 0.5)
-  (setq lsp-completion-provider :capf)
+  ;; We use Corfu, don't let lsp-mode configure company
+  (setq lsp-completion-provider :none)
   (setq lsp-enable-symbol-highlighting nil)
   (setq lsp-enable-on-type-formatting nil)
   (setq lsp-enable-code-lens nil)
@@ -682,6 +697,11 @@ The DWIM behaviour of this command is as follows:
         '("--clang-tidy"
           "--header-insertion=never"
           "--completion-style=detailed"))
+  ;; Filter LSP candidates with Orderless (per Corfu wiki)
+  (defun my/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+  (add-hook 'lsp-completion-mode-hook #'my/lsp-mode-setup-completion)
   (lsp-enable-which-key-integration))
 
 (add-to-list 'load-path (locate-user-emacs-file "lisp"))

@@ -31,11 +31,12 @@
      "8fbf2d585f1138caaafa9e523fa3a20614c1d1dcc6002c9808c3e40028e21df4"
      default))
  '(package-selected-packages
-   '(avy company consult-denote denote-journal denote-markdown diff-hl
+   '(avy cape consult-denote corfu denote-journal denote-markdown diff-hl
          dired-subtree doric-themes ef-themes embark-consult
          expand-region fontaine ghostel git-link gruber-darker-theme
          lsp-mode magit marginalia move-text multiple-cursors
-          nerd-icons-completion nerd-icons-dired orderless perspective
+          nerd-icons-completion nerd-icons-corfu nerd-icons-dired orderless
+          perspective
           sharper trashed treesit-auto vertico
           yasnippet-snippets)))
 (custom-set-faces

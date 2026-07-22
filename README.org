@@ -78,7 +78,9 @@ Add these to your =~/.bashrc= or =~/.zshrc=:
 - ~orderless~ :: flexible completion matching
 - ~consult~ :: search and navigation commands
 - ~embark~ :: context-aware actions
-- ~company~ :: in-buffer completion
+- ~corfu~ :: in-buffer completion popup (uses standard capf)
+- ~cape~ :: extra completion-at-point backends (dabbrev, file, keyword, elisp)
+- ~nerd-icons-corfu~ :: icons in the Corfu popup
 
 ** Appearance
 - ~gruber-darker-theme~ :: default theme
