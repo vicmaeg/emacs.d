@@ -323,6 +323,9 @@ The DWIM behaviour of this command is as follows:
   :bind
   (("C-." . embark-act)
    ("C-;" . embark-dwim)
+   ;; Terminal-safe alternates: C-. and C-; cannot be sent by terminals
+   ("C-c ." . embark-act)
+   ("C-c ;" . embark-dwim)
    ("C-h B" . embark-bindings)
    ("C-x K" . embark-kill-buffer-and-window))
   :config
@@ -352,6 +355,19 @@ The DWIM behaviour of this command is as follows:
   :after corfu
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+
+;; Corfu's popup needs child frames, which TTY frames on Emacs 30 lack
+;; (native support lands in Emacs 31 as `tty-child-frames').
+;; corfu-terminal renders the popup with popon overlays in TTY frames;
+;; with the default `corfu-terminal-disable-on-gui' (t) GUI frames keep
+;; using native child frames, so it is safe to enable globally in the
+;; daemon.
+(use-package corfu-terminal
+  :ensure t
+  :if (not (featurep 'tty-child-frames))
+  :after corfu
+  :config
+  (corfu-terminal-mode +1))
 
 (use-package cape
   :ensure t
@@ -531,9 +547,10 @@ The DWIM behaviour of this command is as follows:
          (dired-mode . diff-hl-dired-mode))
   :config
   (setq diff-hl-side 'left)
-  ;; Use margin characters in terminal, fringe bitmaps in GUI
-  (unless (display-graphic-p)
-    (diff-hl-margin-mode 1)))
+  ;; Margins everywhere: the daemon starts headless, so a
+  ;; `display-graphic-p' check here would always take the terminal
+  ;; branch anyway.  Margins work in both GUI and TTY frames.
+  (diff-hl-margin-mode 1))
 
 ;;; Jump to visible text
 
@@ -554,8 +571,13 @@ The DWIM behaviour of this command is as follows:
 (use-package expand-region
   :ensure t
   :bind
-  (("C-=" . er/expand-region)
-   ("C--" . er/contract-region)))
+  (;; C-= is unsendable in terminals; C-c = works everywhere
+   ("C-=" . er/expand-region)
+   ("C-c =" . er/expand-region)
+   ;; Contract is on C-c - only: binding C-- shadows undo, because
+   ;; ?\C-- and ?\C-_ are the same character (and in terminals C-/,
+   ;; C-_ and C-- all arrive as the same byte)
+   ("C-c -" . er/contract-region)))
 
 ;;; Multiple cursors
 
