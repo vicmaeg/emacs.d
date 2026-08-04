@@ -32,11 +32,12 @@
      default))
  '(package-selected-packages
    '(avy cape consult-denote corfu denote-journal denote-markdown diff-hl
-         dired-subtree doric-themes ef-themes embark-consult fontaine
-         ghostel git-link gruber-darker-theme kanagawa-themes lsp-mode
-         magit marginalia meow move-text nerd-icons-completion
-         nerd-icons-corfu nerd-icons-dired orderless perspective sharper
-         trashed treesit-auto vertico yasnippet-snippets)))
+         dired-subtree doric-themes ef-themes embark-consult
+         expand-region fontaine ghostel git-link gruber-darker-theme
+         kanagawa-themes lsp-mode magit marginalia move-text
+         multiple-cursors nerd-icons-completion nerd-icons-corfu
+         nerd-icons-dired orderless perspective sharper trashed
+         treesit-auto vertico yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

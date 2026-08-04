@@ -8,10 +8,8 @@ This is my personal Emacs configuration, designed to run as a daemon via
 
 - Daemon-first: Emacs runs in the background, frames are opened with
   ~emacsclient~.
-- Modal editing with ~meow~ (selection-first, Kakoune-style): NORMAL
-  state uses plain letters, and its KEYPAD gives modifier-free access
-  to all Emacs keys (~SPC x f~ = ~C-x C-f~) — friendly to terminals and
-  terminal multiplexers where chords like ~C->~ or ~C-.~ cannot be sent.
+- Modal-free editing: heavy use of ~avy~, ~consult~, and custom key bindings
+  instead of modal editing.
 - Minimal GUI chrome: no menu bar, tool bar, scroll bars, or tooltips.
 - Package management through ~use-package~ and MELPA.
 
@@ -89,13 +87,18 @@ mind:
 - *diff-hl*: margin indicators are used in both GUI and TTY (the
   daemon starts headless, so frame-type checks at startup are
   meaningless).
-- *Keybindings terminals cannot send* (~C-.~, ~C-;~):
-  | Action      | GUI   | TTY-safe |
-  |-------------+-------+----------|
-  | embark-act  | ~C-.~ | ~C-c .~  |
-  | embark-dwim | ~C-;~ | ~C-c ;~  |
-  Selection expansion and multiple cursors need no such chords: they
-  are handled by ~meow~ NORMAL-state keys and its BEACON state.
+- *Keybindings terminals cannot send* (~C-.~, ~C-;~, ~C-=~):
+  | Action             | GUI    | TTY-safe |
+  |--------------------+--------+----------|
+  | embark-act         | ~C-.~  | ~C-c .~  |
+  | embark-dwim        | ~C-;~  | ~C-c ;~  |
+  | er/expand-region   | ~C-=~  | ~C-c =~  |
+  | er/contract-region | ~C-c -~ | ~C-c -~ |
+  Contract is only on ~C-c -~ because ~C--~ is the same character as
+  ~C-_~ (undo) — binding it would shadow undo everywhere.
+- *Fontaine* is a no-op in TTY frames (fonts are terminal-side) and is
+  intentionally applied unguarded at startup: the daemon is headless
+  then, so a ~display-graphic-p~ guard would break GUI frames.
 
 * Notable packages
 
@@ -119,9 +122,9 @@ mind:
 - ~nerd-icons~ family :: icons for dired, completion, and buffers
 
 ** Navigation and editing
-- ~meow~ :: modal editing (selection-first); BEACON state for multiple
-  cursors, KEYPAD for modifier-free ~C-x~/~C-c~/~M-~ access
 - ~avy~ :: jump to visible text
+- ~expand-region~ :: incrementally expand selections
+- ~multiple-cursors~ :: edit multiple locations at once
 - ~move-text~ :: move lines and regions up/down
 - ~yasnippet~ :: snippets
 
