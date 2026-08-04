@@ -588,7 +588,8 @@ The DWIM behaviour of this command is as follows:
   (defun meow-setup ()
     (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
     (meow-motion-define-key
-     '("F" . avy-goto-char-2)
+     '("j" . meow-next)
+     '("k" . meow-prev)
      '("<escape>" . ignore))
     (meow-leader-define-key
      ;; Use SPC (0-9) for digit arguments.
@@ -631,7 +632,6 @@ The DWIM behaviour of this command is as follows:
      '("e" . meow-next-word)
      '("E" . meow-next-symbol)
      '("f" . meow-find)
-     '("F" . avy-goto-char-2)
      '("g" . meow-cancel-selection)
      '("G" . meow-grab)
      '("h" . meow-left)
